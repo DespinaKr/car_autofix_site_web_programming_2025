@@ -1,4 +1,5 @@
-const router = require('express').Router();
+const express = require('express');
+const router = express.Router();
 const db = require('../db');
 const { isAuthenticated, hasRole } = require('../middleware/auth');
 
@@ -44,6 +45,17 @@ router.delete('/:id', isAuthenticated, async (req, res) => {
     return res.status(403).json({ error:'Forbidden' });
   await db.execute(`DELETE FROM users WHERE id=?`, [id]);
   res.json({ message:'Deleted' });
+});
+
+// COUNT (για secretary, ή βάλε τον ρόλο που χρειάζεσαι)
+router.get('/count', isAuthenticated, hasRole('secretary'), async (_req, res) => {
+  try {
+    const [[{ c }]] = await db.execute('SELECT COUNT(*) AS c FROM users');
+    res.json({ count: c });
+  } catch (err) {
+    console.error('users/count', err);
+    res.status(500).json({ error: 'Internal error' });
+  }
 });
 
 module.exports = router;

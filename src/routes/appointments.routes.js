@@ -1,10 +1,17 @@
-const router = require('express').Router();
+const express = require('express');
+const router = express.Router();
 const db = require('../db');
 const { isAuthenticated, hasRole } = require('../middleware/auth');
 const { findAvailableMechanic } = require('../utils/scheduling');
 
 function canView(u, appt){ 
   return u.role==='secretary' || u.id===appt.customer_id || u.id===appt.mechanic_id; 
+}
+
+// Helper για «σήμερα» στην Australia/Perth ώστε να ταιριάζει με την εκφώνηση/ωράριο
+function todayPerth() {
+  // en-CA => YYYY-MM-DD
+  return new Date().toLocaleDateString('en-CA', { timeZone: 'Australia/Perth' });
 }
 
 // List / search
@@ -27,8 +34,12 @@ router.get('/', isAuthenticated, async (req, res) => {
 
   if (u.role==='customer') { sql += ` AND a.customer_id=?`; params.push(u.id); }
   if (u.role==='mechanic') { sql += ` AND a.mechanic_id=?`; params.push(u.id); }
+  if (!from && !to && !status && !query) {
+  const today = todayPerth(); // αντί για new Date().toISOString().slice(0,10)
+  sql += ` AND a.appt_date = ? AND a.status = 'CREATED'`;
+  params.push(today);
   sql += ` ORDER BY a.appt_date DESC, a.appt_time DESC LIMIT 50`;
-
+  }
   const [items] = await db.execute(sql, params);
   res.json({ items });
 });
@@ -40,7 +51,11 @@ router.post('/', isAuthenticated, hasRole('customer','secretary'), async (req, r
   if (u.role==='customer') customer_id = u.id;
 
   const [h,m] = String(appt_time||'').split(':').map(Number);
-  if (isNaN(h) || h < 8 || h > 15) return res.status(400).json({ error: 'Ώρα 08:00–16:00' });
+
+if (isNaN(h) || h < 8 || h > 14) {
+  return res.status(400).json({ error: 'Ώρα 08:00–16:00 (διάρκεια 2h, τελευταίο ξεκίνημα 14:00)' });
+}
+
   if (reason === 'repair' && !problem_desc) return res.status(400).json({ error: 'Απαιτείται περιγραφή προβλήματος' });
 
   const mechanic_id = await findAvailableMechanic(db, appt_date, appt_time);
@@ -70,9 +85,10 @@ router.patch('/:id/reschedule', isAuthenticated, hasRole('customer','secretary')
     return res.status(403).json({ error:'Forbidden' });
   if (a.status !== 'CREATED') return res.status(400).json({ error:'Only when status=CREATED' });
 
-  const [h] = String(appt_time||'').split(':').map(Number);
-  if (isNaN(h) || h < 8 || h > 15) return res.status(400).json({ error:'Ώρα 08:00–16:00' });
-
+ const [h,m] = String(appt_time||'').split(':').map(Number);
+if (isNaN(h) || h < 8 || h > 14) {
+  return res.status(400).json({ error: 'Ώρα 08:00–16:00 (διάρκεια 2h, τελευταίο ξεκίνημα 14:00)' });
+}
   const mech = await findAvailableMechanic(db, appt_date, appt_time);
   if (!mech) return res.status(409).json({ error:'Δεν υπάρχει διαθέσιμος μηχανικός' });
 
@@ -116,6 +132,41 @@ router.post('/:id/works', isAuthenticated, hasRole('mechanic','secretary'), asyn
   await db.execute(`UPDATE appointments SET total_cost = (SELECT COALESCE(SUM(cost),0) FROM works WHERE appointment_id=?) WHERE id=?`,
                    [id, id]);
   res.json({ message:'Καταχωρήθηκε εργασία' });
+});
+
+// Συνολικός αριθμός ραντεβού (προαιρετικά: ?status=CREATED|IN_PROGRESS|COMPLETED|CANCELED)
+router.get('/count', isAuthenticated, hasRole('secretary'), async (req, res) => {
+  try {
+    const { status } = req.query;
+    let sql = 'SELECT COUNT(*) AS c FROM appointments';
+    const params = [];
+    if (status) {
+      sql += ' WHERE status = ?';
+      params.push(status);
+    }
+    const [[{ c }]] = await db.execute(sql, params);
+    res.json({ count: c });
+  } catch (err) {
+    console.error('appointments/count', err);
+    res.status(500).json({ error: 'Internal error' });
+  }
+});
+
+// Ραντεβού της ΣΗΜΕΡΙΝΗΣ ημέρας (Perth) που εκκρεμούν by default
+// Προαιρετικά: ?status=... (αν δεν δοθεί => CREATED)
+router.get('/today/count', isAuthenticated, hasRole('secretary'), async (req, res) => {
+  try {
+    const status = req.query.status || 'CREATED';
+    const today = todayPerth();
+    const [[{ c }]] = await db.execute(
+      'SELECT COUNT(*) AS c FROM appointments WHERE appt_date = ? AND status = ?',
+      [today, status]
+    );
+    res.json({ count: c, date: today, status });
+  } catch (err) {
+    console.error('appointments/today/count', err);
+    res.status(500).json({ error: 'Internal error' });
+  }
 });
 
 module.exports = router;

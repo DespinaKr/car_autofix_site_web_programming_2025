@@ -1,4 +1,5 @@
-const router = require('express').Router();
+const express = require('express');
+const router = express.Router();
 const db = require('../db');
 const { isAuthenticated, hasRole } = require('../middleware/auth');
 
@@ -70,6 +71,16 @@ router.delete('/:id', isAuthenticated, async (req, res) => {
   if (!canManage(req.session.user, v.owner_id)) return res.status(403).json({ error:'Forbidden' });
   await db.execute(`DELETE FROM vehicles WHERE id=?`, [id]);
   res.json({ message:'Deleted' });
+});
+
+router.get('/count', isAuthenticated, hasRole('secretary'), async (_req, res) => {
+  try {
+    const [[{ c }]] = await db.execute('SELECT COUNT(*) AS c FROM vehicles');
+    res.json({ count: c });
+  } catch (err) {
+    console.error('vehicles/count', err);
+    res.status(500).json({ error: 'Internal error' });
+  }
 });
 
 module.exports = router;

@@ -5,59 +5,52 @@ const helmet = require('helmet');
 const session = require('express-session');
 const MySQLStore = require('express-mysql-session')(session);
 
-const authRoutes = require('./src/routes/auth.routes');
-const usersRoutes = require('./src/routes/users.routes');
-const vehiclesRoutes = require('./src/routes/vehicles.routes');
-const appointmentsRoutes = require('./src/routes/appointments.routes');
-const uploadsRoutes = require('./src/routes/uploads.routes');
-
 const app = express();
 
-app.use(helmet({
-  contentSecurityPolicy: {
-    useDefaults: true,
-    directives: {
-      "default-src": ["'self'"],
-      "img-src": ["'self'", "data:", "blob:", "https://source.unsplash.com", "https://images.unsplash.com"],
-      "script-src": ["'self'"],
-      "style-src": ["'self'", "'unsafe-inline'"],
-      "connect-src": ["'self'"]
-    }
-  }
-}));
+// 1) Security headers
+app.use(helmet());
 
-app.use(express.json({ limit: '1mb' }));
+// 2) Body parsers
+app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// 3) Sessions σε MySQL (για XAMPP)
 const store = new MySQLStore({
   host: process.env.DB_HOST,
-  port: Number(process.env.DB_PORT || 3306),
+  port: process.env.DB_PORT,
   user: process.env.DB_USER,
-  password: process.env.DB_PASS,
-  database: process.env.DB_NAME
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
+  createDatabaseTable: true
 });
 app.use(session({
-  secret: process.env.SESSION_SECRET || 'autofix-secret',
+  secret: process.env.SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
   store,
-  cookie: { maxAge: 1000 * 60 * 60 } // 1 hour
+  cookie: {
+    httpOnly: true,
+    sameSite: 'lax',   // ok για localhost same-origin
+    secure: false      // ΜΗΝ το κάνεις true σε http
+  }
 }));
 
-app.use(express.static(path.join(__dirname, 'public')));
+// 4) Static files από /public (όλο το UI στο :3000)
+const publicDir = path.join(__dirname, 'public');
+app.use(express.static(publicDir));
 
-app.use('/api/auth', authRoutes);
-app.use('/api/users', usersRoutes);
-app.use('/api/vehicles', vehiclesRoutes);
-app.use('/api/appointments', appointmentsRoutes);
-app.use('/api/uploads', uploadsRoutes);
+// 5) API routes
+app.use('/api/auth', require('./src/routes/auth.routes'));
+app.use('/api/users', require('./src/routes/users.routes'));
+app.use('/api/vehicles', require('./src/routes/vehicles.routes'));
+app.use('/api/appointments', require('./src/routes/appointments.routes'));
+app.use('/api/uploads', require('./src/routes/uploads.routes'));
 
 app.get('/healthz', (_,res)=>res.json({ok:true}));
 
-// Single Page-ish fallbacks
-const publicDir = path.join(__dirname, 'public');
-const landing = path.join(publicDir, 'index.html');
-app.get('/', (_,res)=>res.sendFile(landing));
+// 6) Landing
+app.get('/', (_,res)=>res.sendFile(path.join(publicDir, 'index.html')));
 
+// 7) Start στο :3000
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`🚗 AutoFix listening on http://localhost:${PORT}`));

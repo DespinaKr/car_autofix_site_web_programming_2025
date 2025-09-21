@@ -1,46 +1,159 @@
-<!doctype html><html lang="el"><head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Εγγραφή · AutoFix</title>
-<link rel="stylesheet" href="/css/style.css">
-<script defer src="/js/api.js"></script>
-<script defer src="/js/auth.js"></script>
-</head><body>
-<div class="navbar">
-  <div class="brand"><span class="badge">AF</span> Μηχανοουργείο AutoFix</div>
-  <a class="small" href="/login.html">Σύνδεση</a>
-</div>
-<div class="container" style="max-width:720px">
-  <div class="card" style="padding:28px">
-    <div style="text-align:center;margin-bottom:10px"><span class="badge">AF</span></div>
-    <h2 style="text-align:center">Εγγραφή</h2>
-    <form id="registerForm">
-      <div class="form-row">
-        <div><label>Όνομα</label><input class="input" name="first_name" required></div>
-        <div><label>Επώνυμο</label><input class="input" name="last_name" required></div>
-      </div>
-      <label>Όνομα Χρήστη</label><input class="input" name="username" required>
-      <label>Email</label><input class="input" name="email" type="email" required>
-      <label>Ρόλος</label>
-      <select class="input" name="role" required onchange="document.querySelector('#customerFields').classList.toggle('hidden', this.value!=='customer'); document.querySelector('#mechanicFields').classList.toggle('hidden', this.value!=='mechanic');">
-        <option value="customer">Πελάτης</option>
-        <option value="mechanic">Μηχανικός</option>
-      </select>
-      <div id="customerFields">
-        <div class="form-row">
-          <div><label>ΑΦΜ</label><input class="input" name="afm"></div>
-          <div><label>Διεύθυνση</label><input class="input" name="address"></div>
-        </div>
-      </div>
-      <div id="mechanicFields" class="hidden">
-        <label>Ειδικότητα</label><input class="input" name="specialty">
-      </div>
-      <label>Αριθμός Ταυτότητας</label><input class="input" name="id_card" required>
-      <div class="form-row">
-        <div><label>Κωδικός</label><input class="input" name="password" type="password" required></div>
-        <div><label>Επιβεβαίωση Κωδικού</label><input class="input" name="password2" type="password" required></div>
-      </div>
-      <button class="btn" style="width:100%;margin-top:12px">Εγγραφή</button>
-    </form>
+<!doctype html>
+<html lang="el">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Εγγραφή · AutoFix</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/style.css">
+  <script defer src="/js/api.js"></script>
+  <script defer src="/js/auth.js"></script>
+  <script defer src="/js/nav.js"></script>
+</head>
+
+<body class="auth-page">
+  <div class="navbar">
+    <a class="brand" href="/" aria-label="Αρχική σελίδα">
+      <img class="brand-logo" src="/img/logo.png" alt="AutoFix logo">
+      <span>Μηχανοουργείο AutoFix</span>
+    </a>
+    <a class="small" href="/login.html">Σύνδεση</a>
   </div>
-</div>
-</body></html>
+
+  <div class="container" style="max-width:760px">
+    <div class="card" style="padding:28px">
+      <div style="text-align:center;margin-bottom:10px"><span class="badge">AF</span></div>
+      <h2 style="text-align:center;margin-bottom:12px">Εγγραφή</h2>
+
+      <!-- Tabs ρόλων -->
+      <div class="tabs" role="tablist" style="margin-bottom:16px">
+        <button type="button" class="tab active" data-role="customer">Πελάτης</button>
+        <button type="button" class="tab" data-role="mechanic">Μηχανικός</button>
+      </div>
+
+      <form id="registerForm" autocomplete="off" novalidate>
+        <input type="hidden" name="role" id="roleInput" value="customer">
+
+        <div class="form-row">
+          <div>
+            <label>Όνομα</label>
+            <input class="input" name="first_name" required>
+          </div>
+          <div>
+            <label>Επίθετο</label>
+            <input class="input" name="last_name" required>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div>
+            <label>Όνομα Χρήστη</label>
+            <input class="input" name="username" required>
+          </div>
+          <div>
+            <label>Email</label>
+            <input class="input" name="email" type="email" required>
+          </div>
+        </div>
+
+        <!-- Πεδίο κοινό -->
+        <label>Αριθμός Ταυτότητας (ΑΤ)</label>
+        <input class="input" name="id_card" required>
+
+        <!-- Πελάτης -->
+        <div id="customerFields">
+          <div class="form-row">
+            <div>
+              <label>ΑΦΜ</label>
+              <input class="input" name="afm" minlength="9" maxlength="20">
+            </div>
+            <div>
+              <label>Διεύθυνση</label>
+              <input class="input" name="address">
+            </div>
+          </div>
+        </div>
+
+        <!-- Μηχανικός -->
+        <div id="mechanicFields" class="hidden">
+          <label>Ειδικότητα</label>
+          <input class="input" name="specialty" placeholder="π.χ. Engine Specialist">
+        </div>
+
+        <div class="form-row">
+          <div>
+            <label>Κωδικός</label>
+            <div class="input-wrap">
+              <input class="input has-toggle" name="password" type="password" required autocomplete="new-password">
+              <button type="button" class="toggle-pass" data-toggle="password" aria-label="Εμφάνιση κωδικού"
+                aria-pressed="false">
+                <!-- αρχικά: eye-off (κρυφό) -->
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+                  stroke-linejoin="round" aria-hidden="true">
+                  <path d="M3 3l18 18" />
+                  <path d="M1.5 12s3.5-7 10.5-7c2.2 0 4.2.6 5.8 1.6" />
+                  <path d="M22.5 12s-3.5 7-10.5 7c-2.2 0-4.2-.6-5.8-1.6" />
+                  <path d="M9.5 9.5a3.5 3.5 0 004.9 4.9" />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label>Επιβεβαίωση Κωδικού</label>
+            <div class="input-wrap">
+              <input class="input has-toggle" name="password2" type="password" required autocomplete="new-password">
+              <button type="button" class="toggle-pass" data-toggle="password" aria-label="Εμφάνιση κωδικού"
+                aria-pressed="false">
+                <!-- αρχικά: eye-off (κρυφό) -->
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+                  stroke-linejoin="round" aria-hidden="true">
+                  <path d="M3 3l18 18" />
+                  <path d="M1.5 12s3.5-7 10.5-7c2.2 0 4.2.6 5.8 1.6" />
+                  <path d="M22.5 12s-3.5 7-10.5 7c-2.2 0-4.2-.6-5.8-1.6" />
+                  <path d="M9.5 9.5a3.5 3.5 0 004.9 4.9" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <button class="btn" style="width:100%;margin-top:12px">Εγγραφή</button>
+
+        <div class="small" style="opacity:.8;margin-top:10px">
+          Μετά την εγγραφή, ο λογαριασμός σας παραμένει <b>ανενεργός</b>
+          μέχρι να τον ενεργοποιήσει γραμματέας.
+        </div>
+      </form>
+
+      <div class="small" style="text-align:center;margin-top:10px">
+        Έχεις λογαριασμό; <a href="/login.html">Σύνδεση εδώ !</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER (ίδιο με της αρχικής) -->
+  <div class="footer grid cols-3" style="margin-top:26px">
+    <div>
+      <b>Μηχανοουργείο AutoFix</b>
+      <div class="small">Το καλύτερο μηχανουργείο στην Αθήνα</div>
+    </div>
+    <div>
+      <b>Επικοινωνήστε μαζί μας</b>
+      <div class="small">+30 210 1234567 · Λεωφ. Συγγρού 123, Αθήνα</div>
+    </div>
+    <div>
+      <b>Οι Υπηρεσίες μας</b>
+      <div class="small">
+        Επιδιόρθωση Κινητήρα · Συντήρηση &amp; Σέρβις ·
+        Ηλεκτρονικά Συστήματα · Φρένα &amp; Ανάρτηση
+      </div>
+    </div>
+  </div>
+  <div class="small" style="text-align:center;margin-top:10px">
+    © 2024 Μηχανοουργείο AutoFix. All rights reserved.
+  </div>
+</body>
+
+</html>

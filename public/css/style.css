@@ -3,168 +3,447 @@
   --shadow:0 10px 30px rgba(0,0,0,.35);
   --radius:18px;
 }
-*{box-sizing:border-box}
-body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--text);}
-a{color:var(--text);text-decoration:none}
-.container{max-width:1200px;margin:0 auto;padding:20px}
-.navbar{height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;background:#0b1422;border-bottom:1px solid #0f1b2f;position:sticky;top:0;z-index:10}
-.brand{display:flex;gap:10px;align-items:center;font-weight:700}
-.badge{background:#1d2a44;border-radius:99px;padding:6px 10px;font-size:12px;color:#c9d3e5}
-.btn{padding:12px 18px;border-radius:12px;background:var(--primary);border:none;color:#fff;font-weight:600;box-shadow:var(--shadow);cursor:pointer}
-.btn.secondary{background:#1f2a44}
-.btn.ghost{background:transparent;border:1px solid #2a3c67}
-.hero{background:linear-gradient(135deg,#2e5bff 0%,#1847e0 60%,#15397d 100%);padding:70px 30px;border-radius:24px;box-shadow:var(--shadow);margin:24px 0;text-align:center}
-.hero h1{font-size:48px;margin:0 0 12px 0}
-.hero p{color:#e9f0ff}
-.grid{display:grid;gap:16px}
-.grid.cols-4{grid-template-columns:repeat(4,minmax(0,1fr))}
-.grid.cols-3{grid-template-columns:repeat(3,minmax(0,1fr))}
-.card{background:var(--panel);border:1px solid #1b2947;border-radius:var(--radius);padding:18px;box-shadow:var(--shadow)}
-.card h3{margin:0 0 8px 0}
-.kpi{display:flex;align-items:center;gap:12px}
-.kpi .num{font-size:24px;font-weight:800}
-.footer{border-top:1px solid #1b2947;margin-top:40px;color:var(--muted);padding:30px 0}
-.input, select{width:100%;padding:12px;border-radius:12px;border:1px solid #2a3c67;background:#0e1a30;color:#e6edf3}
-.form-row{display:grid;gap:12px;grid-template-columns:repeat(2,1fr)}
-label{font-size:13px;color:#bfcae0}
-.table{width:100%;border-collapse:separate;border-spacing:0 10px}
-.table th{color:#9fb1d7;text-align:left;padding:8px}
-.table td{background:var(--panel);border:1px solid #1b2947;border-left:none;border-right:none;padding:12px}
-.badge.status{padding:4px 10px;border-radius:999px;font-size:12px}
-.badge.green{background:#0f2d1c;color:#8cf3be}
-.badge.blue{background:#0d2340;color:#9cc9ff}
-.badge.orange{background:#2f1c00;color:#ffcc8a}
-.badge.red{background:#401313;color:#ffb3b3}
-.sidebar{position:fixed;left:0;top:64px;bottom:0;width:220px;background:#0b1422;border-right:1px solid #0f1b2f;padding:12px;overflow:auto}
-.main{margin-left:220px;padding:20px}
-.sidebar a{display:flex;gap:10px;align-items:center;padding:10px 12px;border-radius:10px;color:#c9d3e5}
-.sidebar a.active, .sidebar a:hover{background:#16233e}
-.hidden{display:none}
-.toast{position:fixed;right:20px;bottom:20px;background:#0d1b33;padding:14px 18px;border-radius:12px;border:1px solid #243458;box-shadow:var(--shadow)}
-.small{font-size:12px;color:var(--muted)}
-/* --- homepage add-ons (services/contact/footer) --- */
-.service-card { position: relative; }
-.service-card .icon-badge {
-  display:inline-grid; place-items:center;
-  width:44px; height:44px; border-radius:10px;
-  background:#1d4ed8;           /* μπλε τετράγωνο όπως στα screenshots */
-  font-size:22px; margin-bottom:10px;
+
+/* ===== Base ===== */
+*{ box-sizing:border-box }
+body{
+  margin:0;
+  font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+  background:var(--bg); color:var(--text);
+}
+a{ color:var(--text); text-decoration:none }
+.container{ max-width:1200px; margin:0 auto; padding:20px }
+
+/* ===== Navbar & Brand ===== */
+.navbar{
+  height:64px; display:flex; align-items:center; justify-content:space-between;
+  padding:0 16px; background:#0b1422; border-bottom:1px solid #0f1b2f;
+  position:sticky; top:0; z-index:10;
+}
+.navbar .brand{ display:flex; align-items:center; gap:12px; font-weight:700; color:inherit; text-decoration:none }
+.brand-logo{
+  height:56px; width:auto; object-fit:contain; border-radius:0; box-shadow:none; display:block;
+}
+.badge{ background:#1d2a44; border-radius:99px; padding:6px 10px; font-size:12px; color:#c9d3e5 }
+
+/* ===== Buttons ===== */
+.btn{
+  padding:12px 18px; border-radius:12px; background:var(--primary);
+  border:none; color:#fff; font-weight:600; box-shadow:var(--shadow); cursor:pointer;
+}
+.btn.secondary{ background:#1f2a44 }
+.btn.ghost{ background:transparent; border:1px solid #2a3c67 }
+
+/* ===== Hero (gradient base, χρησιμοποιείται σε άλλες σελίδες) ===== */
+.hero{
+  background:linear-gradient(135deg,#2e5bff 0%,#1847e0 60%,#15397d 100%);
+  padding:70px 30px; border-radius:24px; box-shadow:var(--shadow); margin:24px 0; text-align:center;
+}
+.hero h1{ font-size:48px; margin:0 0 12px 0 }
+.hero p{ color:#e9f0ff }
+
+/* ===== Hero με εικόνα (home) ===== */
+.hero.with-bg{
+  position:relative; border-radius:18px; overflow:hidden; background:none !important;
+}
+.hero.with-bg::before{
+  content:""; position:absolute; inset:0; z-index:-1;
+  background:var(--hero) center/cover no-repeat;
+  /* ελαφρώς πιο «καθαρή» αντίθεση */
+  filter:brightness(.96) contrast(1.06) saturate(1.05);
+}
+.hero.with-bg::after{
+  content:""; position:absolute; inset:0; z-index:-1; pointer-events:none;
+  background:linear-gradient(180deg, rgba(2,6,23,.06) 0%, rgba(2,6,23,.10) 55%, rgba(2,6,23,.12) 100%);
 }
 
-.contact-band h2 { text-align:center; margin-bottom:8px; }
-.contact-items { gap: 22px !important; }     /* ήδη grid cols-3 από το δικό σου CSS */
-.contact-items .item { text-align:center; }
-.contact-items .icon-badge {
-  display:inline-grid; place-items:center;
-  width:44px; height:44px; border-radius:10px;
-  background:#1d4ed8; font-size:22px; margin-bottom:6px;
+/* ===== Grid (single source of truth) ===== */
+.grid{ display:grid; gap:22px; }
+.grid.cols-4{ grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); }
+.grid.cols-3{ grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); }
+.grid .card{ width:auto; }
+
+/* ===== Cards / Footer ===== */
+.card{ background:var(--panel); border:1px solid #1b2947; border-radius:var(--radius); padding:18px; box-shadow:var(--shadow) }
+.card h3{ margin:0 0 8px 0 }
+.footer{ border-top:1px solid rgba(255,255,255,.08); margin-top:40px; color:var(--muted); padding:30px 0 }
+.footer.grid.cols-3 > div b{ display:block; margin-bottom:6px }
+.footer .small{ opacity:.9 }
+
+/* ===== Forms / Tables ===== */
+.input, select{ width:100%; padding:12px; border-radius:12px; border:1px solid #2a3c67; background:#0e1a30; color:#e6edf3 }
+.form-row{ display:grid; gap:12px; grid-template-columns:repeat(2,1fr) }
+label{ font-size:13px; color:#bfcae0 }
+.table{ width:100%; border-collapse:separate; border-spacing:0 10px }
+.table th{ color:#9fb1d7; text-align:left; padding:8px }
+.table td{ background:var(--panel); border:1px solid #1b2947; border-left:none; border-right:none; padding:12px }
+.badge.status{ padding:4px 10px; border-radius:999px; font-size:12px }
+.badge.green{ background:#0f2d1c; color:#8cf3be }
+.badge.blue{ background:#0d2340; color:#9cc9ff }
+.badge.orange{ background:#2f1c00; color:#ffcc8a }
+.badge.red{ background:#401313; color:#ffb3b3 }
+
+/* ===== Sidebar ===== */
+.sidebar{
+  position:fixed; left:0; top:64px; bottom:0; width:220px;
+  background:#0b1422; border-right:1px solid #0f1b2f; padding:12px; overflow:auto;
 }
+.main{ margin-left:220px; padding:20px }
+.sidebar a{ display:flex; gap:10px; align-items:center; padding:10px 12px; border-radius:10px; color:#c9d3e5 }
+.sidebar a.active, .sidebar a:hover{ background:#16233e }
 
-/* footer τριών στηλών */
-.footer { 
-  border-top:1px solid rgba(255,255,255,.08);
-  padding-top:16px; margin-top:26px;
+/* ===== Misc ===== */
+.hidden{ display:none }
+.toast{ position:fixed; right:20px; bottom:20px; background:#0d1b33; padding:14px 18px; border-radius:12px; border:1px solid #243458; box-shadow:var(--shadow) }
+.small{ font-size:12px; color:var(--muted) }
+
+/* ===== Services (single definitions) ===== */
+.service-card{ position:relative; padding:16px; border-radius:14px; min-height:190px; transition:transform .2s ease, box-shadow .2s ease; }
+.service-card:hover{ transform:translateY(-6px); box-shadow:0 14px 36px rgba(0,0,0,.28); }
+.service-card .service-thumb{
+  width:100%; aspect-ratio:16/10; object-fit:cover; border-radius:12px; margin-bottom:12px;
+  box-shadow:0 6px 20px rgba(0,0,0,.25);
 }
-.footer.grid.cols-3 > div b { display:block; margin-bottom:6px; }
-.footer .small { opacity:.9; }
-
-/* ==== FIX services/contact grid so it doesn't squeeze ==== */
-
-/* Γενικό grid */
-.grid { display: grid; gap: 22px; }
-
-/* Οι 4 κάρτες: κάν’ τες responsive με auto-fit + minmax */
-.grid.cols-4 {
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-}
-
-/* Τα 3 στοιχεία επικοινωνίας επίσης responsive */
-.grid.cols-3 {
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-}
-
-/* Μην περιορίζονται τα cards από πλάτη */
-.grid .card { width: auto; }
-
-/* Κάρτες υπηρεσιών: λίγη ανάσα και σωστό wrapping */
-.service-card { padding: 20px; border-radius: 14px; }
-.service-card h3, .service-card p { word-break: normal; hyphens: none; }
-
-/* Μπλε badge εικονιδίου */
-.icon-badge {
-  display: inline-grid; place-items: center;
-  width: 44px; height: 44px; border-radius: 10px;
-  background: #1d4ed8; font-size: 22px; margin-bottom: 10px;
-}
-
-/* ====== Hero με εικόνα ====== */
-.hero.with-bg {
-  position: relative;
-  background: center/cover no-repeat;
-  background-image: var(--hero);
-  border-radius: 18px;
-  overflow: hidden;
-}
-.hero.with-bg::before {
-  content: "";
-  position: absolute; inset: 0;
-  /* σκούρο overlay για αναγνωσιμότητα κειμένου */
-  background: linear-gradient(135deg, rgba(2,6,23,.78), rgba(17,24,39,.55));
-}
-.hero.with-bg > * { position: relative; z-index: 1; }
-
-/* ====== Κάρτες Υπηρεσιών με φωτο ====== */
-.service-card { padding: 16px; border-radius: 14px; }
-.service-card .service-thumb {
-  width: 100%; aspect-ratio: 16/10; object-fit: cover;
-  border-radius: 12px; margin-bottom: 12px;
-  box-shadow: 0 6px 20px rgba(0,0,0,.25);
-}
-.service-card .icon-badge {
-  display:inline-grid; place-items:center;
-  width:44px; height:44px; border-radius:10px;
+.icon-badge{
+  display:inline-grid; place-items:center; width:44px; height:44px; border-radius:10px;
   background:#1d4ed8; font-size:22px; margin-bottom:10px;
 }
 
-/* ====== Responsive grids (μην “ζουλιούνται”) ====== */
-.grid { display:grid; gap:22px; }
-.grid.cols-4 { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
-.grid.cols-3 { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
-.grid .card { width:auto; }
+/* Contact block */
+.contact-band h2{ text-align:center; margin-bottom:8px }
+.contact-items{ gap:22px !important }
+.contact-items .item{ text-align:center }
 
-/* --- Accessibility & links --- */
-a:visited { color: #9aa7ff; }            /* διακριτό visited όπως ζητείται */
-a:hover { text-decoration: underline; }
-:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
-.visually-hidden { position:absolute!important; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); }
+/* ===== Accessibility ===== */
+a:visited{ color:#9aa7ff }
+a:hover{ text-decoration:underline }
+:focus-visible{ outline:2px solid var(--primary); outline-offset:2px }
+.visually-hidden{ position:absolute!important; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0) }
 
-/* --- Form errors (κατάλληλα μηνύματα δίπλα στα πεδία) --- */
-.field { margin-bottom: 12px; }
-.field .error { color: var(--danger); font-size: 12px; margin-top: 6px; }
-.input.error { border-color: #ff453a; background: #201318; }
+/* Form errors */
+.field{ margin-bottom:12px }
+.field .error{ color:var(--danger); font-size:12px; margin-top:6px }
+.input.error{ border-color:#ff453a; background:#201318 }
 
-/* --- Responsive grid breakpoints --- */
-@media (max-width: 1200px) {
-  .grid.cols-4 { grid-template-columns: repeat(3, minmax(0,1fr)); }
-}
-@media (max-width: 900px) {
-  .grid.cols-4 { grid-template-columns: repeat(2, minmax(0,1fr)); }
-  .grid.cols-3 { grid-template-columns: repeat(2, minmax(0,1fr)); }
-  .hero h1 { font-size: 38px; }
-  .form-row { grid-template-columns: 1fr; } /* μικρές οθόνες: φόρμες σε 1 στήλη */
-}
-@media (max-width: 640px) {
-  .grid.cols-4, .grid.cols-3 { grid-template-columns: 1fr; }
-  .container { padding: 14px; }
-  .navbar { padding: 0 12px; }
+/* ===== Tabs (register) ===== */
+.tabs{ display:flex; gap:8px; background:#0f1b2f; border:1px solid #1b2c4f; border-radius:12px; padding:6px }
+.tab{ flex:1; padding:10px 12px; border-radius:8px; background:transparent; border:1px solid transparent; color:#c9d3e5; cursor:pointer; font-weight:600 }
+.tab.active{ background:#1a2b4e; border-color:#284173; color:#fff }
+
+/* ===== Hero 2.0 layout ===== */
+.hero-pro{ padding:28px }
+.hero-pro .hero-grid{ display:grid; gap:28px; align-items:center; grid-template-columns:1.2fr .8fr }
+.hero-left h1{ font-size:clamp(28px, 4.6vw, 40px); margin:0 0 6px }
+.hero-left p{ margin:0 0 16px; font-size:16px; opacity:.95 }
+.hero-cta{ display:flex; gap:12px; margin-bottom:14px }
+
+/* Feature chips */
+.feature-chips{ display:flex; flex-wrap:wrap; gap:8px }
+.chip{
+  border:1px solid rgba(255,255,255,.25);
+  padding:6px 10px; border-radius:999px; font-size:13px;
+  background:rgba(255,255,255,.06); color:#fff; backdrop-filter:saturate(120%) blur(2px);
 }
 
-/* --- Sidebar as off-canvas σε mobile --- */
-@media (max-width: 900px) {
-  .sidebar {
-    position: fixed; left: -240px; top: 64px; bottom: 0; width: 240px;
-    transition: left .25s ease;
-  }
-  body.nav-open .sidebar { left: 0; }
-  .main { margin-left: 0; } /* σε mobile το main γεμίζει */
+/* Float cards (δεξιά) */
+.hero-right{ display:grid; gap:12px; justify-items:end }
+.float-card{
+  background:rgba(255,255,255,.10); border:1px solid rgba(255,255,255,.22);
+  padding:12px 14px; border-radius:14px; color:#f3f6ff;
+  box-shadow:0 10px 26px rgba(0,0,0,.18); transform:translateY(0);
+  transition:transform .25s ease, box-shadow .25s ease; will-change:transform;
 }
+.float-card.tilt:hover{ transform:translateY(-6px) scale(1.02) }
+.float-card.delay{ animation:bob 5s ease-in-out infinite .6s }
+.hero-right .icon-badge{
+  width:34px; height:34px; border-radius:50%;
+  background:radial-gradient(100% 100% at 30% 20%, #93c5fd 0%, #3b82f6 70%);
+  box-shadow:0 6px 16px rgba(59,130,246,.35); margin-bottom:0; margin-right:8px;
+}
+@keyframes bob{ 50%{ transform:translateY(-6px) } }
+
+/* Text effects */
+.fx-glow{ text-shadow:0 6px 20px rgba(0,0,0,.45), 0 0 1px rgba(0,0,0,.45) }
+.fx-stroke{ -webkit-text-stroke:1px rgba(0,0,0,.35); text-shadow:none }
+.fx-gradient{
+  background:linear-gradient(90deg,#fff 0%,#eaf2ff 50%,#dbeafe 100%);
+  -webkit-background-clip:text; background-clip:text; color:transparent;
+  text-shadow:0 1px 8px rgba(0,0,0,.18);
+}
+.fx-shine{ position:relative; display:inline-block; overflow:hidden }
+.fx-shine::after{
+  content:""; position:absolute; inset:0;
+  background:linear-gradient(120deg, transparent 0%, rgba(255,255,255,.65) 50%, transparent 100%);
+  transform:skewX(-18deg) translateX(-130%);
+}
+.fx-shine:hover::after, .fx-shine.animate::after{ animation:shine 1.2s ease forwards }
+@keyframes shine{ to{ transform:skewX(-18deg) translateX(130%) } }
+.fx-tight{ letter-spacing:.2px; line-height:1.1 }
+
+/* Stats */
+.section{ margin:34px 0 }
+.section-title{ font-size:24px; margin:0 0 12px }
+.stats-grid{ display:grid; gap:16px; grid-template-columns:repeat(4,minmax(0,1fr)) }
+.stat{
+  background:var(--card-bg,#0f172a); border-radius:14px; padding:16px;
+  border:1px solid rgba(255,255,255,.06); text-align:center;
+}
+.stat .num{ font-size:clamp(24px,4.5vw,32px); font-weight:700 }
+.stat .label{ opacity:.9 }
+
+/* Testimonials (light slider) */
+.testi{
+  position:relative; overflow:hidden; background:#0f172a;
+  border:1px solid rgba(255,255,255,.06); border-radius:16px; padding:20px;
+}
+.testi .slide{ display:none; text-align:center }
+.testi .slide.active{ display:block }
+.testi .who{ opacity:.9; margin-top:6px }
+.testi .dots{ display:flex; gap:8px; justify-content:center; margin-top:10px }
+.testi .dot{
+  width:10px; height:10px; border-radius:50%;
+  border:1px solid rgba(255,255,255,.45); background:transparent; cursor:pointer;
+}
+.testi .dot.active{ background:#fff }
+
+/* CTA band */
+.cta-band{
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
+  padding:18px; border-radius:14px;
+  background:radial-gradient(120% 120% at 0% 0%, #1d4ed8 0%, #0f172a 60%);
+  border:1px solid rgba(255,255,255,.12);
+}
+.cta-band .cta-txt h3{ margin:0 0 6px }
+@media (max-width:680px){ .cta-band{ flex-direction:column; align-items:flex-start } }
+
+/* Glassy box για τα κείμενα του hero */
+.hero-box{
+  max-width:720px; padding:18px 20px; border-radius:16px;
+  background:rgba(255,255,255,.10); border:1px solid rgba(255,255,255,.28);
+  backdrop-filter:blur(5px) saturate(120%); box-shadow:0 10px 28px rgba(0,0,0,.18);
+}
+
+/* ===== Responsive ===== */
+@media (max-width:1200px){
+  .grid.cols-4{ grid-template-columns:repeat(3, minmax(0,1fr)) }
+}
+@media (max-width:900px){
+  .grid.cols-4{ grid-template-columns:repeat(2, minmax(0,1fr)) }
+  .grid.cols-3{ grid-template-columns:repeat(2, minmax(0,1fr)) }
+  .hero h1{ font-size:38px }
+  .form-row{ grid-template-columns:1fr }
+  /* Sidebar off-canvas */
+  .sidebar{ position:fixed; left:-240px; top:64px; bottom:0; width:240px; transition:left .25s ease }
+  body.nav-open .sidebar{ left:0 }
+  .main{ margin-left:0 }
+}
+@media (max-width:640px){
+  .grid.cols-4, .grid.cols-3{ grid-template-columns:1fr }
+  .container{ padding:14px }
+  .navbar{ padding:0 12px }
+}
+@media (max-width:520px){
+  .brand-logo{ height:44px }
+  .navbar .brand span{ font-size:16px }
+}
+/* === HERO CTA: καθαρότερα κουμπιά === */
+.hero.with-bg .btn{
+  font-size:16px;
+  padding:12px 22px;
+  border-radius:14px;
+  backdrop-filter: blur(4px) saturate(130%);
+  box-shadow: 0 8px 24px rgba(0,0,0,.35), 0 0 0 1px rgba(255,255,255,.06) inset;
+  transition: transform .15s ease, box-shadow .15s ease, background .15s ease;
+}
+
+.hero.with-bg .btn:not(.ghost){           /* Πλήκτρο “Κλείστε Ραντεβού” */
+  background: linear-gradient(180deg,#3b5bff 0%,#2e5bff 100%);
+  border:1px solid #5f85ff;
+  color:#fff;
+  text-shadow: 0 1px 0 rgba(0,0,0,.25);
+}
+
+.hero.with-bg .btn.ghost{                 /* Πλήκτρο “Σύνδεση” */
+  background: rgba(8,15,28,.58);         /* πιο σκούρο για αντίθεση */
+  border:1px solid rgba(210,220,255,.45);
+  color:#eaf2ff;
+}
+
+.hero.with-bg .btn:hover{
+  transform: translateY(-1px);
+  box-shadow: 0 12px 30px rgba(0,0,0,.45), 0 0 0 1px rgba(255,255,255,.08) inset;
+}
+
+.hero.with-bg .btn:active{ transform: translateY(0) scale(.98) }
+
+.hero.with-bg .btn:focus-visible{
+  outline:2px solid #93b4ff;             /* καθαρό focus ring */
+  outline-offset:3px;
+}
+
+/* =========================
+   Small safe overrides
+   ========================= */
+
+/* 1) CTA κουμπιά στο HERO: πιο καθαρά/ορατά */
+.hero .btn{
+  background: #3b5bfd;
+  border: 1px solid #5f7aff;
+  color: #fff;
+  box-shadow: 0 10px 24px rgba(45,93,255,.35);
+}
+.hero .btn.ghost{
+  background: rgba(255,255,255,.14);
+  border: 1px solid rgba(255,255,255,.60);
+  color: #fff;
+}
+.hero .btn:hover{ transform: translateY(-1px); filter: brightness(1.06); }
+.hero .btn:active{ transform: translateY(0); }
+
+/* 2) Δεξιές «γυάλινες» κάρτες: πιο φωτεινές & ΣΤΑΘΕΡΕΣ */
+.hero-right .float-card{
+  background: rgba(255,255,255,.18);
+  border: 1px solid rgba(255,255,255,.32);
+  color: #eef3ff;
+  backdrop-filter: blur(6px);
+  animation: none !important;          /* κόβει το «κούνημα» */
+  transform: translateY(0);            /* σταθερό baseline */
+}
+.hero-right .float-card:hover{ transform: translateY(-2px); }
+.hero-right .float-card.delay{ animation: none !important; } /* ειδικά για τη μεσαία κάρτα */
+.hero-right .icon-badge{
+  box-shadow: 0 6px 16px rgba(59,130,246,.35);
+}
+
+/* 3) Κουμπί στο CTA band πιο φωτεινό */
+.cta-band .btn{
+  background: #3b5bfd;
+  border: 1px solid #5f7aff;
+  color: #fff;
+  box-shadow: 0 8px 22px rgba(59,91,253,.33);
+}
+.cta-band .btn:hover{ filter: brightness(1.07); transform: translateY(-1px); }
+.cta-band .btn:active{ transform: translateY(0); }
+/* Sticky footer μόνο για login/register */
+body.auth-page{
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+body.auth-page .container{
+  flex: 1 0 auto;       /* γεμίζει τον διαθέσιμο χώρο */
+}
+body.auth-page .footer,
+body.auth-page .footer + .small{
+  flex-shrink: 0;       /* δεν μικραίνει */
+  margin-top: 0;        /* χωρίς έξτρα κενό, κάθεται κάτω */
+}
+/* ========= AUTH HERO (φωτογραφία πίσω από τη φόρμα) ========= */
+.auth-hero{
+  position:relative;
+  padding-top:24px;            /* λίγο αέρα πάνω από την κάρτα */
+}
+.auth-hero::before{
+  content:""; position:absolute; inset:0;
+  background: var(--hero, url('/img/hero.jpg')) center/cover no-repeat;
+  filter: brightness(.95) contrast(1.06) saturate(1.05);
+  opacity:.6;
+}
+.auth-hero::after{
+  content:""; position:absolute; inset:0;
+  background: radial-gradient(80% 60% at 50% 0%, rgba(2,6,23,.55) 0%, transparent 60%);
+}
+.auth-hero > .container{ position:relative; z-index:1; }
+
+/* ========= GLASS CARD + gradient περίγραμμα ========= */
+.auth-card{
+  background: rgba(15,23,42,.60);
+  border: 1px solid rgba(255,255,255,.14);
+  backdrop-filter: blur(8px) saturate(120%);
+  box-shadow: 0 20px 60px rgba(0,0,0,.35);
+  border-radius: 18px;
+}
+.auth-card.gradient-border{ position:relative; }
+.auth-card.gradient-border::before{
+  content:""; position:absolute; inset:-1px; border-radius:20px; padding:1px;
+  background: linear-gradient(135deg,#60a5fa,#4f46e5,#22d3ee);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude;
+  pointer-events:none;
+}
+
+/* ========= Inputs με icons & φωτεινό focus ========= */
+.field{ position:relative; }
+.input-icon{
+  position:absolute; left:12px; top:50%; transform:translateY(-50%);
+  font-size:15px; opacity:.85; pointer-events:none;
+}
+.input.has-icon{ padding-left:40px; }
+.input:focus{
+  border-color:#3b82f6;
+  box-shadow: 0 0 0 3px rgba(59,130,246,.25);
+}
+
+/* ========= Πιο premium κουμπί ========= */
+.btn.primary{
+  background: linear-gradient(90deg,#2e5bff,#4f46e5);
+  box-shadow: 0 12px 28px rgba(79,70,229,.35);
+  border: none;
+}
+.btn.primary:hover{ transform: translateY(-1px); box-shadow: 0 16px 38px rgba(79,70,229,.40); }
+.btn.primary:active{ transform: translateY(0); }
+
+/* Μικρό εφέ στο badge */
+.badge.ring{ position:relative; }
+.badge.ring::before{
+  content:""; position:absolute; inset:-3px; border-radius:999px;
+  background: conic-gradient(#60a5fa,#4f46e5,#60a5fa);
+  filter: blur(4px); z-index:-1; opacity:.75;
+}
+/* Login – χωρίς background, κεντραρισμένο */
+.auth-center { padding-top: 36px; padding-bottom: 10px; }
+.auth-card  { box-shadow: var(--shadow); }
+
+/* ===== Login: input eye toggle ===== */
+.input-wrap{ position:relative; }
+.toggle-pass{
+  position:absolute; right:10px; top:50%; transform:translateY(-50%);
+  width:34px; height:34px; display:grid; place-items:center;
+  border:0; border-radius:8px; cursor:pointer;
+  color:#cfe2ff; background:rgba(255,255,255,.06);
+  transition:background .12s ease, opacity .12s ease;
+}
+.toggle-pass:hover{ background:rgba(255,255,255,.10); opacity:1; }
+.toggle-pass:focus-visible{ outline:2px solid var(--primary); outline-offset:2px; }
+.icon{ width:20px; height:20px; }
+
+/* ===== Buttons λίγο πιο ζωντανά (χωρίς να αλλάξουμε την παλέτα σου) ===== */
+.btn{
+  background: linear-gradient(180deg, #3f66ff 0%, #2e5bff 70%);
+  box-shadow: 0 10px 30px rgba(46,91,255,.35), inset 0 1px 0 rgba(255,255,255,.25);
+  transition: transform .08s ease, filter .12s ease, box-shadow .12s ease;
+}
+.btn:hover{ transform: translateY(-1px); filter: saturate(1.06); }
+.btn:active{ transform: translateY(0); box-shadow: 0 6px 18px rgba(46,91,255,.28), inset 0 1px 0 rgba(255,255,255,.2); }
+
+/* spacing για σελίδες auth */
+.auth-page .container{ margin-block: 42px 26px; }
+
+/* ===== Password toggle - layout/spacing ===== */
+.input-wrap { position: relative; }
+.input-wrap .input { padding-right: 48px; } /* χώρος για το κουμπί δεξιά */
+
+.toggle-pass{
+  position:absolute; right:8px; top:50%; transform:translateY(-50%);
+  width:36px; height:36px; display:grid; place-items:center;
+  border:0; border-radius:8px; cursor:pointer; line-height:0;
+  color:#cfe2ff; background:rgba(255,255,255,.06);
+  transition:background .12s ease, opacity .12s ease, transform .06s ease;
+}
+.toggle-pass:hover{ background:rgba(255,255,255,.10); }
+.toggle-pass:active{ transform:translateY(-50%) scale(.98); }
+.toggle-pass:focus-visible{ outline:2px solid var(--primary); outline-offset:2px; }
+.toggle-pass svg{ width:20px; height:20px; display:block; }
+
+
+

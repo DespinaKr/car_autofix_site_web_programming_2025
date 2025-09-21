@@ -1,0 +1,81 @@
+/* ===== Secretary Dashboard Polish (πάνω από το base style.css) ===== */
+.page-title { margin: 8px 0 2px; font-size: 28px; }
+.subtitle { color: #aeb8cc; margin-bottom: 16px; }
+
+/* Layout */
+.grid-4{display:grid;gap:16px;grid-template-columns:repeat(4,minmax(0,1fr))}
+.grid-3{display:grid;gap:16px;grid-template-columns:repeat(3,minmax(0,1fr))}
+@media (max-width:1100px){.grid-4{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:720px){.grid-4,.grid-3{grid-template-columns:1fr}}
+
+/* KPI cards */
+.kpi-card{
+  display:flex;align-items:center;gap:12px;
+  background:var(--panel); border:1px solid #1b2947; border-radius:14px;
+  padding:14px 16px; box-shadow:var(--shadow);
+}
+.kpi-card .kpi-circle{
+  width:46px;height:46px;border-radius:12px;display:grid;place-items:center;
+  background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.02));
+  border:1px solid rgba(255,255,255,.10);
+}
+.kpi-card svg{width:22px;height:22px;color:#eef3ff}
+.kpi-meta .kpi-label{font-size:13px;color:#bdc8de}
+.kpi-meta .kpi-num{font:700 22px/1 Inter,system-ui;color:#fff}
+
+.kpi-users .kpi-circle{background:linear-gradient(135deg,#2e5bff33,#1d4ed833)}
+.kpi-veh   .kpi-circle{background:linear-gradient(135deg,#16a34a33,#065f4633)}
+.kpi-appt  .kpi-circle{background:linear-gradient(135deg,#8b5cf633,#6d28d933)}
+.kpi-today .kpi-circle{background:linear-gradient(135deg,#f59e0b33,#b4530933)}
+
+/* Card */
+.card{
+  background:var(--panel); border:1px solid #1b2947; border-radius:14px;
+  padding:14px; box-shadow:var(--shadow); margin:14px 0;
+}
+.card-head h3{margin:4px 0 10px}
+
+/* Recent appointments list */
+.appt-list{list-style:none;margin:0;padding:0}
+.appt{display:flex;align-items:center;gap:14px;padding:12px 6px;border-top:1px solid rgba(255,255,255,.06)}
+.appt:first-child{border-top:none}
+.av{
+  display:grid;place-items:center;
+  width:52px;height:52px;border-radius:12px;
+  background:linear-gradient(180deg,#0f1b2f,#0b1422);
+  border:1px solid rgba(255,255,255,.08);
+  color:#cfe2ff;font-weight:700;
+}
+.av .t{font-size:13px;line-height:1}
+.av .m{font-size:11px;opacity:.85}
+
+.info{flex:1}
+.info .who{font-weight:700;margin-bottom:2px}
+.info .meta{font-size:13px;color:#aeb8cc}
+
+.pill{
+  border-radius:999px;padding:6px 10px;font-size:12px;
+  border:1px solid rgba(255,255,255,.16);
+}
+.pill-orange{background:#3b2412;color:#ffd7a3}
+.pill-green {background:#112b1b;color:#b8f3c7}
+.pill-blue  {background:#0e1b2f;color:#b7d8ff}
+.pill-gray  {background:#2a2a2a;color:#ddd}
+
+.view-all{
+  display:block;text-align:center;margin-top:8px;
+  background:#0f1b2f;border:1px solid rgba(255,255,255,.12);
+  color:#cfe2ff;padding:10px;border-radius:10px;
+}
+
+/* Quick actions */
+.qa{
+  display:block;padding:16px;border-radius:14px;color:#fff;
+  border:1px solid rgba(255,255,255,.10);
+  box-shadow:var(--shadow);
+}
+.qa-title{font-weight:700;margin-bottom:4px}
+.qa-desc{opacity:.9}
+.qa-blue  {background:linear-gradient(135deg,#2563eb,#1e3a8a)}
+.qa-green {background:linear-gradient(135deg,#16a34a,#065f46)}
+.qa-purple{background:linear-gradient(135deg,#8b5cf6,#6d28d9)}

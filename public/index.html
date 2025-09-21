@@ -1,14 +1,22 @@
 <!doctype html>
 <html lang="el">
+
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Μηχανοουργείο AutoFix</title>
+  <title>Μηχανουργείο AutoFix</title>
   <link rel="stylesheet" href="/css/style.css">
+  <script defer src="/js/api.js"></script>
+  <script defer src="/js/auth.js"></script>
+  <script defer src="/js/nav.js"></script>
 </head>
+
 <body>
   <div class="navbar">
-    <div class="brand"><span class="badge">AF</span> Μηχανουργείο AutoFix</div>
+    <a class="brand" href="/" aria-label="Αρχική">
+      <img class="brand-logo" src="/img/logo.png" alt="AutoFix logo">
+      <span>Μηχανουργείο AutoFix</span>
+    </a>
     <div style="display:flex;gap:14px;align-items:center">
       <span class="small">🌐 EL</span>
       <span class="small">🖥️</span>
@@ -17,43 +25,116 @@
   </div>
 
   <div class="container">
-    <!-- Hero χωρίς εικόνα -->
-    <div class="hero">
-      <h1>Καλώς ήρθατε στο Μηχανουργείο AutoFix</h1>
-      <p>Επαγγελματικές υπηρεσίες επιδιόρθωσης και συντήρησης αυτοκινήτων</p>
-      <div style="margin-top:18px">
-        <a class="btn" href="/register.html">Κλείστε Ραντεβού</a>
-        <a class="btn ghost" href="/login.html">Σύνδεση</a>
+    <!-- HERO 2.0 -->
+    <div class="hero with-bg hero-pro hero-parallax" style="--hero:url('/img/hero.jpg')">
+      <div class="hero-grid">
+        <div class="hero-left">
+          <div class="hero-box">
+            <h1 class="fx-gradient fx-glow fx-tight">Καλώς ήρθατε στο Μηχανουργείο AutoFix</h1>
+            <p class="fx-glow">Service & επισκευές με διαφάνεια, ταχύτητα και εγγύηση ποιότητας.</p>
+
+            <div class="hero-cta">
+              <a class="btn" href="/register.html">Κλείστε Ραντεβού</a>
+              <a class="btn ghost" href="/login.html">Σύνδεση</a>
+            </div>
+
+            <div class="feature-chips">
+              <span class="chip">✔ Διαγνωστικός έλεγχος</span>
+              <span class="chip">✔ Γνήσια ανταλλακτικά</span>
+              <span class="chip">✔ Παράδοση στην ώρα</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Δεξιά “κάρτες” με ελαφριά κίνηση -->
+        <div class="hero-right">
+          <div class="float-card tilt">
+            <div class="icon-badge">🔧</div> Επισκευές Κινητήρα
+          </div>
+          <div class="float-card tilt">
+            <div class="icon-badge">⚡</div> Ηλεκτρονικά Συστήματα
+          </div>
+          <div class="float-card tilt">
+            <div class="icon-badge">🛡️</div> Φρένα &amp; Ανάρτηση
+          </div>
+        </div>
       </div>
     </div>
 
-    <!-- Υπηρεσίες χωρίς εικόνες -->
+    <!-- Υπηρεσίες -->
     <h2 style="margin:20px 0">Οι Υπηρεσίες μας</h2>
     <div class="grid cols-4">
       <div class="card service-card">
         <div class="icon-badge">🔧</div>
         <h3>Επιδιόρθωση Κινητήρα</h3>
-        <p>Professional engine diagnostics and repair services</p>
+        <p>Επαγγελματικός έλεγχος κινητήρα και επισκευές</p>
       </div>
 
       <div class="card service-card">
         <div class="icon-badge">🚗</div>
         <h3>Συντήρηση &amp; Σέρβις</h3>
-        <p>Regular maintenance and comprehensive service packages</p>
+        <p>Τακτική συντήρηση και ολοκληρωμένα πακέτα σέρβις</p>
       </div>
 
       <div class="card service-card">
         <div class="icon-badge">⚡</div>
         <h3>Ηλεκτρονικά Συστήματα</h3>
-        <p>Advanced electronic systems and computer diagnostics</p>
+        <p>Προηγμένα ηλεκτρονικά και διαγνωστικά υπολογιστή</p>
       </div>
 
       <div class="card service-card">
         <div class="icon-badge">🛡️</div>
         <h3>Φρένα &amp; Ανάρτηση</h3>
-        <p>Brake systems, suspension, and safety inspections</p>
+        <p>Συστήματα φρένων, ανάρτηση και έλεγχοι ασφαλείας</p>
       </div>
     </div>
+
+
+    <!-- ΣΤΑΤΙΣΤΙΚΑ -->
+    <section class="section">
+      <div class="stats-grid">
+        <div class="stat">
+          <div class="num"><span class="count" data-to="2500" data-suffix="+">0</span></div>
+          <div class="label">Οχήματα που εξυπηρετήσαμε</div>
+        </div>
+        <div class="stat">
+          <div class="num"><span class="count" data-to="98" data-suffix="%">0</span></div>
+          <div class="label">Ικανοποίηση πελατών</div>
+        </div>
+        <div class="stat">
+          <div class="num"><span class="count" data-to="12">0</span></div>
+          <div class="label">Έτη εμπειρίας</div>
+        </div>
+        <div class="stat">
+          <div class="num"><span class="count" data-to="24">0</span></div>
+          <div class="label">Ώρες απόκρισης</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Testimonials -->
+    <section class="section">
+      <h2 class="section-title">Τι λένε οι πελάτες μας</h2>
+      <div class="testi">
+        <div class="slide active">
+          <p>«Άψογη εξυπηρέτηση και διάγνωση. Το αυτοκίνητο έγινε σαν καινούριο!»</p>
+          <div class="who">— Ν. Παπαδόπουλος</div>
+        </div>
+        <div class="slide">
+          <p>«Κλείσιμο ραντεβού online και ενημέρωση σε κάθε στάδιο. Επαγγελματίες!»</p>
+          <div class="who">— Ε. Γεωργίου</div>
+        </div>
+        <div class="slide">
+          <p>«Δίκαιες τιμές και ταχύτητα. Το προτείνω ανεπιφύλακτα.»</p>
+          <div class="who">— Μ. Κ.</div>
+        </div>
+        <div class="dots">
+          <button class="dot active"></button>
+          <button class="dot"></button>
+          <button class="dot"></button>
+        </div>
+      </div>
+    </section>
 
     <!-- Επικοινωνία -->
     <div class="card contact-band" style="margin-top:30px">
@@ -77,11 +158,20 @@
       </div>
     </div>
 
+    <!-- CTA band -->
+    <section class="cta-band card" style="margin-top:24px">
+      <div class="cta-txt">
+        <h3>Χρειάζεσαι διάγνωση σήμερα;</h3>
+        <p>Κλείσε ραντεβού σε 1 λεπτό — επιλογή ημέρας & ώρας μέσα από την εφαρμογή.</p>
+      </div>
+      <a class="btn" href="/register.html">Κλείστε ραντεβού τώρα</a>
+    </section>
+
     <!-- Footer -->
     <div class="footer grid cols-3">
       <div>
         <b>Μηχανοουργείο AutoFix</b>
-        <div class="small">Το καλύτερο μηχανουργείο στην Αθήνα</div>
+        <div class="small">Το καλύτερο μηχανοουργείο στην Αθήνα</div>
       </div>
       <div>
         <b>Επικοινωνήστε μαζί μας</b>
@@ -92,7 +182,12 @@
         <div class="small">Επιδιόρθωση Κινητήρα · Συντήρηση & Σέρβις · Ηλεκτρονικά Συστήματα · Φρένα & Ανάρτηση</div>
       </div>
     </div>
-    <div class="small" style="text-align:center;margin-top:10px">© 2024 Μηχανοουργείο AutoFix. All rights reserved.</div>
+    <div class="small" style="text-align:center;margin-top:10px">© 2024 Μηχανοουργείο AutoFix. All rights reserved.
+    </div>
   </div>
+
+  <!-- Φόρτωση υπάρχοντος JS για micro-interactions -->
+  <script defer src="/js/auth.js"></script>
 </body>
+
 </html>
