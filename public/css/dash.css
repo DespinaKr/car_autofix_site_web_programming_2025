@@ -1,6 +1,6 @@
-/* ===== Secretary Dashboard Polish (πάνω από το base style.css) ===== */
-.page-title { margin: 8px 0 2px; font-size: 28px; }
-.subtitle { color: #aeb8cc; margin-bottom: 16px; }
+/* ===== Secretary Dashboard (clean) ===== */
+.page-title{margin:8px 0 2px;font-size:28px}
+.subtitle{color:#aeb8cc;margin-bottom:16px}
 
 /* Layout */
 .grid-4{display:grid;gap:16px;grid-template-columns:repeat(4,minmax(0,1fr))}
@@ -11,57 +11,46 @@
 /* KPI cards */
 .kpi-card{
   display:flex;align-items:center;gap:12px;
-  background:var(--panel); border:1px solid #1b2947; border-radius:14px;
-  padding:14px 16px; box-shadow:var(--shadow);
+  background:var(--panel);border:1px solid #1b2947;border-radius:14px;
+  padding:14px 16px;box-shadow:var(--shadow);
 }
-.kpi-card .kpi-circle{
-  width:46px;height:46px;border-radius:12px;display:grid;place-items:center;
-  background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.02));
-  border:1px solid rgba(255,255,255,.10);
+.kpi-circle{
+  width:56px;height:56px;border-radius:16px;display:grid;place-items:center;
+  background:var(--kpi-bg);box-shadow:inset 0 0 0 1px var(--kpi-border);color:var(--kpi-fg);
 }
-.kpi-card svg{width:22px;height:22px;color:#eef3ff}
+.kpi-card .kpi-circle svg{width:22px;height:22px}
 .kpi-meta .kpi-label{font-size:13px;color:#bdc8de}
 .kpi-meta .kpi-num{font:700 22px/1 Inter,system-ui;color:#fff}
 
-.kpi-users .kpi-circle{background:linear-gradient(135deg,#2e5bff33,#1d4ed833)}
-.kpi-veh   .kpi-circle{background:linear-gradient(135deg,#16a34a33,#065f4633)}
-.kpi-appt  .kpi-circle{background:linear-gradient(135deg,#8b5cf633,#6d28d933)}
-.kpi-today .kpi-circle{background:linear-gradient(135deg,#f59e0b33,#b4530933)}
+/* Χρώματα ανά κάρτα (όπως το reference) */
+.kpi-card.kpi-users {--kpi-bg:rgba(66,133,244,.18);--kpi-border:rgba(66,133,244,.28);--kpi-fg:#a7c7ff}
+.kpi-card.kpi-veh   {--kpi-bg:rgba(52,168,83,.18); --kpi-border:rgba(52,168,83,.28); --kpi-fg:#9be1b5}
+.kpi-card.kpi-appt  {--kpi-bg:rgba(124,92,255,.18); --kpi-border:rgba(124,92,255,.28); --kpi-fg:#b8a6ff}
+.kpi-card.kpi-today {--kpi-bg:rgba(255,153,102,.18);--kpi-border:rgba(255,153,102,.28);--kpi-fg:#ffcf99}
 
-/* Card */
+/* Generic card */
 .card{
-  background:var(--panel); border:1px solid #1b2947; border-radius:14px;
-  padding:14px; box-shadow:var(--shadow); margin:14px 0;
+  background:var(--panel);border:1px solid #1b2947;border-radius:14px;
+  padding:14px;box-shadow:var(--shadow);margin:14px 0;
 }
 .card-head h3{margin:4px 0 10px}
 
-/* Recent appointments list */
-.appt-list{list-style:none;margin:0;padding:0}
-.appt{display:flex;align-items:center;gap:14px;padding:12px 6px;border-top:1px solid rgba(255,255,255,.06)}
-.appt:first-child{border-top:none}
-.av{
-  display:grid;place-items:center;
-  width:52px;height:52px;border-radius:12px;
-  background:linear-gradient(180deg,#0f1b2f,#0b1422);
-  border:1px solid rgba(255,255,255,.08);
-  color:#cfe2ff;font-weight:700;
+/* Recent Appointments (reference look) */
+#recentList{list-style:none;margin:0;padding:0}
+#recentList .appt + .appt{border-top:1px solid rgba(255,255,255,.08)}
+.appt{display:flex;align-items:center;gap:14px;padding:14px 8px}
+.av.av--cal{
+  width:42px;height:42px;flex:0 0 42px;border-radius:12px;
+  display:grid;place-items:center;background:rgba(72,103,235,.18);
+  box-shadow:inset 0 0 0 1px rgba(72,103,235,.28);color:#8fa4ff;
 }
-.av .t{font-size:13px;line-height:1}
-.av .m{font-size:11px;opacity:.85}
+.av .ico{width:20px;height:20px}
+.info{display:grid;gap:2px;min-width:0;flex:1 1 auto}
+.who{color:#e9ebf7;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.meta{color:rgba(233,235,247,.75);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.appt--ref:hover{background:rgba(255,255,255,.03);border-radius:10px}
 
-.info{flex:1}
-.info .who{font-weight:700;margin-bottom:2px}
-.info .meta{font-size:13px;color:#aeb8cc}
-
-.pill{
-  border-radius:999px;padding:6px 10px;font-size:12px;
-  border:1px solid rgba(255,255,255,.16);
-}
-.pill-orange{background:#3b2412;color:#ffd7a3}
-.pill-green {background:#112b1b;color:#b8f3c7}
-.pill-blue  {background:#0e1b2f;color:#b7d8ff}
-.pill-gray  {background:#2a2a2a;color:#ddd}
-
+/* View all button */
 .view-all{
   display:block;text-align:center;margin-top:8px;
   background:#0f1b2f;border:1px solid rgba(255,255,255,.12);
@@ -71,11 +60,10 @@
 /* Quick actions */
 .qa{
   display:block;padding:16px;border-radius:14px;color:#fff;
-  border:1px solid rgba(255,255,255,.10);
-  box-shadow:var(--shadow);
+  border:1px solid rgba(255,255,255,.10);box-shadow:var(--shadow);
 }
 .qa-title{font-weight:700;margin-bottom:4px}
 .qa-desc{opacity:.9}
-.qa-blue  {background:linear-gradient(135deg,#2563eb,#1e3a8a)}
-.qa-green {background:linear-gradient(135deg,#16a34a,#065f46)}
+.qa-blue{background:linear-gradient(135deg,#2563eb,#1e3a8a)}
+.qa-green{background:linear-gradient(135deg,#16a34a,#065f46)}
 .qa-purple{background:linear-gradient(135deg,#8b5cf6,#6d28d9)}
