@@ -1,0 +1,22 @@
+<!doctype html><html lang="el"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Πίνακας Ελέγχου · Πελάτης</title>
+<link rel="stylesheet" href="/css/style.css">
+<script defer src="/js/api.js"></script>
+<script defer src="/js/customer.js"></script>
+</head><body>
+<div class="navbar">
+  <button class="btn ghost" onclick="document.body.classList.toggle('nav-open')">☰ Μενού</button>
+  <div class="brand"><span class="badge">AF</span> Μηχανοουργείο AutoFix</div>
+  <button class="btn ghost" onclick="logout()">Αποσύνδεση</button>
+</div>
+<div class="container">
+  <h2>Τα Ραντεβού μου</h2>
+  <div id="appts"></div>
+  <h2 style="margin-top:20px">Τα Οχήματά μου</h2>
+  <div id="vehicles"></div>
+</div>
+<script>
+async function logout(){ await api('/api/auth/logout',{method:'POST'}); location.href='/login.html'; }
+</script>
+</body></html>

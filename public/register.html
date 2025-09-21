@@ -1,0 +1,46 @@
+<!doctype html><html lang="el"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Εγγραφή · AutoFix</title>
+<link rel="stylesheet" href="/css/style.css">
+<script defer src="/js/api.js"></script>
+<script defer src="/js/auth.js"></script>
+</head><body>
+<div class="navbar">
+  <div class="brand"><span class="badge">AF</span> Μηχανοουργείο AutoFix</div>
+  <a class="small" href="/login.html">Σύνδεση</a>
+</div>
+<div class="container" style="max-width:720px">
+  <div class="card" style="padding:28px">
+    <div style="text-align:center;margin-bottom:10px"><span class="badge">AF</span></div>
+    <h2 style="text-align:center">Εγγραφή</h2>
+    <form id="registerForm">
+      <div class="form-row">
+        <div><label>Όνομα</label><input class="input" name="first_name" required></div>
+        <div><label>Επώνυμο</label><input class="input" name="last_name" required></div>
+      </div>
+      <label>Όνομα Χρήστη</label><input class="input" name="username" required>
+      <label>Email</label><input class="input" name="email" type="email" required>
+      <label>Ρόλος</label>
+      <select class="input" name="role" required onchange="document.querySelector('#customerFields').classList.toggle('hidden', this.value!=='customer'); document.querySelector('#mechanicFields').classList.toggle('hidden', this.value!=='mechanic');">
+        <option value="customer">Πελάτης</option>
+        <option value="mechanic">Μηχανικός</option>
+      </select>
+      <div id="customerFields">
+        <div class="form-row">
+          <div><label>ΑΦΜ</label><input class="input" name="afm"></div>
+          <div><label>Διεύθυνση</label><input class="input" name="address"></div>
+        </div>
+      </div>
+      <div id="mechanicFields" class="hidden">
+        <label>Ειδικότητα</label><input class="input" name="specialty">
+      </div>
+      <label>Αριθμός Ταυτότητας</label><input class="input" name="id_card" required>
+      <div class="form-row">
+        <div><label>Κωδικός</label><input class="input" name="password" type="password" required></div>
+        <div><label>Επιβεβαίωση Κωδικού</label><input class="input" name="password2" type="password" required></div>
+      </div>
+      <button class="btn" style="width:100%;margin-top:12px">Εγγραφή</button>
+    </form>
+  </div>
+</div>
+</body></html>

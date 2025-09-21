@@ -1,0 +1,170 @@
+:root{
+  --bg:#0e1624; --panel:#111c2e; --primary:#2e5bff; --text:#e6edf3; --muted:#9aa4b2; --accent:#1f3bb3; --success:#35c759; --warn:#ff9f0a; --danger:#ff453a;
+  --shadow:0 10px 30px rgba(0,0,0,.35);
+  --radius:18px;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--text);}
+a{color:var(--text);text-decoration:none}
+.container{max-width:1200px;margin:0 auto;padding:20px}
+.navbar{height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;background:#0b1422;border-bottom:1px solid #0f1b2f;position:sticky;top:0;z-index:10}
+.brand{display:flex;gap:10px;align-items:center;font-weight:700}
+.badge{background:#1d2a44;border-radius:99px;padding:6px 10px;font-size:12px;color:#c9d3e5}
+.btn{padding:12px 18px;border-radius:12px;background:var(--primary);border:none;color:#fff;font-weight:600;box-shadow:var(--shadow);cursor:pointer}
+.btn.secondary{background:#1f2a44}
+.btn.ghost{background:transparent;border:1px solid #2a3c67}
+.hero{background:linear-gradient(135deg,#2e5bff 0%,#1847e0 60%,#15397d 100%);padding:70px 30px;border-radius:24px;box-shadow:var(--shadow);margin:24px 0;text-align:center}
+.hero h1{font-size:48px;margin:0 0 12px 0}
+.hero p{color:#e9f0ff}
+.grid{display:grid;gap:16px}
+.grid.cols-4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.grid.cols-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.card{background:var(--panel);border:1px solid #1b2947;border-radius:var(--radius);padding:18px;box-shadow:var(--shadow)}
+.card h3{margin:0 0 8px 0}
+.kpi{display:flex;align-items:center;gap:12px}
+.kpi .num{font-size:24px;font-weight:800}
+.footer{border-top:1px solid #1b2947;margin-top:40px;color:var(--muted);padding:30px 0}
+.input, select{width:100%;padding:12px;border-radius:12px;border:1px solid #2a3c67;background:#0e1a30;color:#e6edf3}
+.form-row{display:grid;gap:12px;grid-template-columns:repeat(2,1fr)}
+label{font-size:13px;color:#bfcae0}
+.table{width:100%;border-collapse:separate;border-spacing:0 10px}
+.table th{color:#9fb1d7;text-align:left;padding:8px}
+.table td{background:var(--panel);border:1px solid #1b2947;border-left:none;border-right:none;padding:12px}
+.badge.status{padding:4px 10px;border-radius:999px;font-size:12px}
+.badge.green{background:#0f2d1c;color:#8cf3be}
+.badge.blue{background:#0d2340;color:#9cc9ff}
+.badge.orange{background:#2f1c00;color:#ffcc8a}
+.badge.red{background:#401313;color:#ffb3b3}
+.sidebar{position:fixed;left:0;top:64px;bottom:0;width:220px;background:#0b1422;border-right:1px solid #0f1b2f;padding:12px;overflow:auto}
+.main{margin-left:220px;padding:20px}
+.sidebar a{display:flex;gap:10px;align-items:center;padding:10px 12px;border-radius:10px;color:#c9d3e5}
+.sidebar a.active, .sidebar a:hover{background:#16233e}
+.hidden{display:none}
+.toast{position:fixed;right:20px;bottom:20px;background:#0d1b33;padding:14px 18px;border-radius:12px;border:1px solid #243458;box-shadow:var(--shadow)}
+.small{font-size:12px;color:var(--muted)}
+/* --- homepage add-ons (services/contact/footer) --- */
+.service-card { position: relative; }
+.service-card .icon-badge {
+  display:inline-grid; place-items:center;
+  width:44px; height:44px; border-radius:10px;
+  background:#1d4ed8;           /* μπλε τετράγωνο όπως στα screenshots */
+  font-size:22px; margin-bottom:10px;
+}
+
+.contact-band h2 { text-align:center; margin-bottom:8px; }
+.contact-items { gap: 22px !important; }     /* ήδη grid cols-3 από το δικό σου CSS */
+.contact-items .item { text-align:center; }
+.contact-items .icon-badge {
+  display:inline-grid; place-items:center;
+  width:44px; height:44px; border-radius:10px;
+  background:#1d4ed8; font-size:22px; margin-bottom:6px;
+}
+
+/* footer τριών στηλών */
+.footer { 
+  border-top:1px solid rgba(255,255,255,.08);
+  padding-top:16px; margin-top:26px;
+}
+.footer.grid.cols-3 > div b { display:block; margin-bottom:6px; }
+.footer .small { opacity:.9; }
+
+/* ==== FIX services/contact grid so it doesn't squeeze ==== */
+
+/* Γενικό grid */
+.grid { display: grid; gap: 22px; }
+
+/* Οι 4 κάρτες: κάν’ τες responsive με auto-fit + minmax */
+.grid.cols-4 {
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+/* Τα 3 στοιχεία επικοινωνίας επίσης responsive */
+.grid.cols-3 {
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+
+/* Μην περιορίζονται τα cards από πλάτη */
+.grid .card { width: auto; }
+
+/* Κάρτες υπηρεσιών: λίγη ανάσα και σωστό wrapping */
+.service-card { padding: 20px; border-radius: 14px; }
+.service-card h3, .service-card p { word-break: normal; hyphens: none; }
+
+/* Μπλε badge εικονιδίου */
+.icon-badge {
+  display: inline-grid; place-items: center;
+  width: 44px; height: 44px; border-radius: 10px;
+  background: #1d4ed8; font-size: 22px; margin-bottom: 10px;
+}
+
+/* ====== Hero με εικόνα ====== */
+.hero.with-bg {
+  position: relative;
+  background: center/cover no-repeat;
+  background-image: var(--hero);
+  border-radius: 18px;
+  overflow: hidden;
+}
+.hero.with-bg::before {
+  content: "";
+  position: absolute; inset: 0;
+  /* σκούρο overlay για αναγνωσιμότητα κειμένου */
+  background: linear-gradient(135deg, rgba(2,6,23,.78), rgba(17,24,39,.55));
+}
+.hero.with-bg > * { position: relative; z-index: 1; }
+
+/* ====== Κάρτες Υπηρεσιών με φωτο ====== */
+.service-card { padding: 16px; border-radius: 14px; }
+.service-card .service-thumb {
+  width: 100%; aspect-ratio: 16/10; object-fit: cover;
+  border-radius: 12px; margin-bottom: 12px;
+  box-shadow: 0 6px 20px rgba(0,0,0,.25);
+}
+.service-card .icon-badge {
+  display:inline-grid; place-items:center;
+  width:44px; height:44px; border-radius:10px;
+  background:#1d4ed8; font-size:22px; margin-bottom:10px;
+}
+
+/* ====== Responsive grids (μην “ζουλιούνται”) ====== */
+.grid { display:grid; gap:22px; }
+.grid.cols-4 { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+.grid.cols-3 { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+.grid .card { width:auto; }
+
+/* --- Accessibility & links --- */
+a:visited { color: #9aa7ff; }            /* διακριτό visited όπως ζητείται */
+a:hover { text-decoration: underline; }
+:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+.visually-hidden { position:absolute!important; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); }
+
+/* --- Form errors (κατάλληλα μηνύματα δίπλα στα πεδία) --- */
+.field { margin-bottom: 12px; }
+.field .error { color: var(--danger); font-size: 12px; margin-top: 6px; }
+.input.error { border-color: #ff453a; background: #201318; }
+
+/* --- Responsive grid breakpoints --- */
+@media (max-width: 1200px) {
+  .grid.cols-4 { grid-template-columns: repeat(3, minmax(0,1fr)); }
+}
+@media (max-width: 900px) {
+  .grid.cols-4 { grid-template-columns: repeat(2, minmax(0,1fr)); }
+  .grid.cols-3 { grid-template-columns: repeat(2, minmax(0,1fr)); }
+  .hero h1 { font-size: 38px; }
+  .form-row { grid-template-columns: 1fr; } /* μικρές οθόνες: φόρμες σε 1 στήλη */
+}
+@media (max-width: 640px) {
+  .grid.cols-4, .grid.cols-3 { grid-template-columns: 1fr; }
+  .container { padding: 14px; }
+  .navbar { padding: 0 12px; }
+}
+
+/* --- Sidebar as off-canvas σε mobile --- */
+@media (max-width: 900px) {
+  .sidebar {
+    position: fixed; left: -240px; top: 64px; bottom: 0; width: 240px;
+    transition: left .25s ease;
+  }
+  body.nav-open .sidebar { left: 0; }
+  .main { margin-left: 0; } /* σε mobile το main γεμίζει */
+}
