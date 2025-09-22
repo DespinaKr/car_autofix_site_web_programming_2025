@@ -3,6 +3,8 @@ const bcrypt = require('bcryptjs');
 const db = require('../db');
 const { notEmpty, isEmail } = require('../utils/validators');
 
+const SESSION_NAME = process.env.SESSION_NAME || 'sid';
+
 router.post('/register', async (req, res) => {
   try{
     const { role, username, email, password, first_name, last_name, id_card, afm, address, specialty } = req.body;
@@ -48,15 +50,27 @@ router.post('/login', async (req, res) => {
   if (!user.is_active) return res.status(403).json({ error:'Account not active' });
   const ok = await bcrypt.compare(password, user.password_hash);
   if (!ok) return res.status(401).json({ error:'Invalid credentials' });
-  req.session.user = { id:user.id, role:user.role, name:`${user.first_name} ${user.last_name}` };
+
+  req.session.user = { id:user.id, role:user.role, name:`${user.first_name} ${user.last_name}`, username:user.username };
   res.json({ message:'Logged in', user:req.session.user });
 });
 
 router.post('/logout', (req, res) => {
-  req.session.destroy(()=>res.json({ message:'Logged out' }));
+  req.session.destroy(() => {
+    res.clearCookie(SESSION_NAME, {
+      path: '/',
+      sameSite: 'lax',
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+    });
+    res.json({ message: 'Logged out' });
+  });
 });
 
 router.get('/me', (req, res) => {
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.set('Pragma', 'no-cache');
+  res.set('Expires', '0');
   res.json({ user: req.session.user || null });
 });
 

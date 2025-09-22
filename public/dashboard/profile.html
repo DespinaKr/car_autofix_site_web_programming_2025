@@ -1,77 +1,54 @@
 <!doctype html>
 <html lang="el">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Προφίλ · Γραμματέας · AutoFix</title>
 
-  <!-- Βασικά styles του project σου -->
-  <link rel="stylesheet" href="/css/style.css"/>
-  <link rel="stylesheet" href="/css/dash.css"/>
-  <script defer src="/js/auth-guard.js"></script>
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="stylesheet" href="/css/dash.css" />
 
-  <!-- Μικρό styling για το avatar (αν δεν υπάρχει ήδη) -->
+  <script defer src="/js/api.js"></script>
+  <script defer src="/js/auth-guard.js"></script>
+  <script defer src="/js/secretary.profile.js"></script>
+
   <style>
-    .avatar-circle{
-      width:84px;height:84px;border-radius:50%;
-      display:grid;place-items:center;font:700 28px/1 Inter,system-ui;
-      background:linear-gradient(135deg,#2563eb33,#1e3a8a33);
-      border:1px solid rgba(255,255,255,.2);color:#eaf2ff;
-    }
+    .avatar-circle{width:84px;height:84px;border-radius:50%;display:grid;place-items:center;font:700 28px/1 Inter,system-ui;background:linear-gradient(135deg,#2563eb33,#1e3a8a33);border:1px solid rgba(255,255,255,.2);color:#eaf2ff}
     .profile-header{display:flex;align-items:center;gap:14px}
     .profile-actions{margin-left:auto}
     .details-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
     .field{background:var(--panel);border:1px solid #1b2947;border-radius:12px;padding:12px}
     .field b{display:block;color:#bdc8de;font-size:12px;margin-bottom:4px}
+    .hidden{display:none}
+    .input{width:100%;background:transparent;border:1px solid #22345a;border-radius:8px;padding:8px}
   </style>
-
-  <!-- APIs & προφίλ λογική -->
-  <script defer src="/js/api.js"></script>
-  <script defer src="/js/secretary.profile.js"></script>
 </head>
+
 <body>
-  <!-- NAVBAR (ίδια με των άλλων σελίδων σου) -->
   <div class="navbar">
     <a class="brand" href="/" aria-label="Αρχική">
       <img class="brand-logo" src="/img/logo.png" alt="AutoFix">
       <span>Μηχανουργείο AutoFix</span>
     </a>
     <div style="display:flex;gap:8px;align-items:center">
-      <span class="badge">EL</span>
-      <div class="badge">Admin Secretary</div>
+      <span class="badge" id="navUser">Admin Secretary</span>
+      <button class="btn ghost" data-action="logout">Αποσύνδεση</button>
     </div>
   </div>
 
-  <!-- SIDEBAR -->
   <aside class="sidebar">
-    <a href="/dashboard/index.html">
-      <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8v-10h-8v10zm0-18v6h8V3h-8z"/></svg>
-      Πίνακας Ελέγχου
-    </a>
-    <a class="active" href="/dashboard/profile.html">
-      <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5Zm0 2c-4.5 0-8 2.3-8 5v3h16v-3c0-2.7-3.5-5-8-5Z"/></svg>
-      Προφίλ
-    </a>
-    <a href="/dashboard/users.html">
-      <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M8 11a3 3 0 1 0-3-3 3 3 0 0 0 3 3Zm0 2c-2.9 0-6 1.4-6 3.5V19h12v-2.5C14 14.4 10.9 13 8 13Zm8-2a2.5 2.5 0 1 0-2.5-2.5A2.5 2.5 0 0 0 16 11Zm0 2c-.5 0-1 0-1.5.1A5 5 0 0 1 19 17v2h3v-2.5C22 14.1 18.9 13 16 13Z"/></svg>
-      Χρήστες
-    </a>
-    <a href="/dashboard/vehicles.html">
-      <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M5.6 7.3A2 2 0 0 1 7.5 6h9a2 2 0 0 1 1.9 1.3l.9 2.7H4.7l.9-2.7ZM4 10a1 1 0 0 0-1 1v3a1 1 0 0 0 1 1v1a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-1h10v1a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-1a1 1 0 0 0 1-1v-3a1 1 0 0 0-1-1H4Zm3.5 1.5a1.5 1.5 0 1 1-1.5 1.5 1.5 1.5 0 0 1 1.5-1.5Zm9 0A1.5 1.5 0 1 1 15 13a1.5 1.5 0 0 1 1.5-1.5Z"/></svg>
-      Οχήματα
-    </a>
-    <a href="/dashboard/appointments.html">
-      <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M19 4h-1V2h-2v2H8V2H6v2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2Zm0 16H5V9h14v11Z"/></svg>
-      Ραντεβού
-    </a>
+    <a href="/dashboard/secretary.html">Πίνακας Ελέγχου</a>
+    <a class="active" href="/dashboard/profile.html">Προφίλ</a>
+    <a href="/dashboard/users.html">Χρήστες</a>
+    <a href="/dashboard/vehicles.html">Οχήματα</a>
+    <a href="/dashboard/appointments.html">Ραντεβού</a>
   </aside>
 
-  <!-- MAIN -->
   <main class="main">
     <h1 class="page-title">Προφίλ</h1>
     <div class="subtitle">Manage your personal information and account settings</div>
 
-    <!-- ΚΑΡΤΑ ΠΡΟΦΙΛ -->
+    <!-- Κάρτα Προφίλ -->
     <section class="card">
       <div class="profile-header">
         <div id="profileAvatar" class="avatar-circle">AS</div>
@@ -85,7 +62,6 @@
       </div>
 
       <div class="details-grid" style="margin-top:14px">
-        <!-- Αριστερά -->
         <div class="field">
           <b>Όνομα</b>
           <div data-field="first_name" data-editable="true">Admin</div>
@@ -115,7 +91,7 @@
       </div>
     </section>
 
-    <!-- Account Information -->
+    <!-- Account Info -->
     <section class="card">
       <div class="card-head"><h3>Account Information</h3></div>
       <div class="details-grid">
@@ -130,22 +106,30 @@
       </div>
     </section>
 
-    <!-- (Προαιρετικό) Αλλαγή κωδικού -->
+    <!-- Ασφάλεια / Αλλαγή Κωδικού -->
     <section class="card">
       <div class="card-head"><h3>Ασφάλεια</h3></div>
-      <form id="pwdForm" class="hidden">
-        <div class="form-row">
-          <div><label>Τρέχων κωδικός</label><input type="password" class="input" name="current"></div>
-          <div><label>Νέος κωδικός</label><input type="password" class="input" name="next"></div>
-          <div><label>Επιβεβαίωση</label><input type="password" class="input" name="confirm"></div>
-          <div style="align-self:end"><button class="btn">Αλλαγή κωδικού</button></div>
+      <form id="pwdForm" class="hidden" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+        <div class="field">
+          <b>Τρέχων κωδικός</b>
+          <input class="input" type="password" name="current" placeholder="••••••••" />
+        </div>
+        <div class="field">
+          <b>Νέος κωδικός</b>
+          <input class="input" type="password" name="next" placeholder="τουλάχιστον 8 χαρακτήρες" />
+        </div>
+        <div class="field">
+          <b>Επανάληψη νέου</b>
+          <input class="input" type="password" name="confirm" placeholder="ξανά" />
+        </div>
+        <div style="grid-column: 1 / -1; text-align:right;">
+          <button class="btn" type="submit">Αλλαγή κωδικού</button>
         </div>
       </form>
-      <div class="small">Η αλλαγή κωδικού εμφανίζεται μόνο όταν πατήσεις «Επεξεργασία».</div>
+      <div class="subtitle">Η αλλαγή κωδικού εμφανίζεται μόνο όταν πατήσεις «Επεξεργασία».</div>
     </section>
-  </main>
 
-  <!-- Προαιρετικό toast -->
-  <div class="toast hidden"></div>
+    <div class="toast hidden"></div>
+  </main>
 </body>
 </html>

@@ -5,52 +5,62 @@ const helmet = require('helmet');
 const session = require('express-session');
 const MySQLStore = require('express-mysql-session')(session);
 
-const app = express();
+const SESSION_NAME = process.env.SESSION_NAME || 'autofix.sid';
 
-// 1) Security headers
+const app = express();                   // 1) φτιάχνουμε ΠΡΩΤΑ το app
+app.set('trust proxy', 1);
+
+// 2) Security headers
 app.use(helmet());
 
-// 2) Body parsers
+// 3) Body parsers
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// 3) Sessions σε MySQL (για XAMPP)
-const store = new MySQLStore({
+// 4) Sessions (MySQL store) – ΜΙΑ φορά, μετά τα parsers, πριν τα routes
+const sessionStore = new MySQLStore({
   host: process.env.DB_HOST,
-  port: process.env.DB_PORT,
+  port: Number(process.env.DB_PORT || 3306),
   user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
+  password: process.env.DB_PASSWORD || process.env.DB_PASS,
   database: process.env.DB_NAME,
-  createDatabaseTable: true
+  createDatabaseTable: true,
 });
+
 app.use(session({
+  name: SESSION_NAME,
   secret: process.env.SESSION_SECRET,
+  store: sessionStore,
   resave: false,
   saveUninitialized: false,
-  store,
   cookie: {
     httpOnly: true,
-    sameSite: 'lax',   // ok για localhost same-origin
-    secure: false      // ΜΗΝ το κάνεις true σε http
-  }
+    sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production',
+    maxAge: 1000 * 60 * 60 * 8,
+  },
 }));
 
-// 4) Static files από /public (όλο το UI στο :3000)
-const publicDir = path.join(__dirname, 'public');
-app.use(express.static(publicDir));
-
-// 5) API routes
+// 5) API routes – ΤΩΡΑ γίνονται mount (έτσι /api/users/me δεν είναι 404)
 app.use('/api/auth', require('./src/routes/auth.routes'));
 app.use('/api/users', require('./src/routes/users.routes'));
 app.use('/api/vehicles', require('./src/routes/vehicles.routes'));
 app.use('/api/appointments', require('./src/routes/appointments.routes'));
 app.use('/api/uploads', require('./src/routes/uploads.routes'));
 
-app.get('/healthz', (_,res)=>res.json({ok:true}));
+// 6) Static (public)
+const publicDir = path.join(__dirname, 'public');
+app.use(express.static(publicDir));
 
-// 6) Landing
-app.get('/', (_,res)=>res.sendFile(path.join(publicDir, 'index.html')));
+// Προαιρετικά: παλιά links -> πίνακα γραμματέα
+app.get(['/dashboard', '/dashboard/', '/dashboard/index.html'], (req, res) => {
+  res.sendFile(path.join(publicDir, 'dashboard', 'secretary.html'));
+});
 
-// 7) Start στο :3000
+// Health & Landing
+app.get('/healthz', (_, res) => res.json({ ok: true }));
+app.get('/',        (_, res) => res.sendFile(path.join(publicDir, 'index.html')));
+
+// Start
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`🚗 AutoFix listening on http://localhost:${PORT}`));

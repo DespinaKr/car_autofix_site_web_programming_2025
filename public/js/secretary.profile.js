@@ -3,27 +3,14 @@
   const $ = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 
-  // Hooks
   const btnEdit = $('#btnProfileEdit');
   const avatar = $('#profileAvatar');
   const statusEl = $('#profileStatus');
   const pwdForm = $('#pwdForm');
 
-  // Πεδία που θα προσπαθήσουμε να γεμίσουμε (αν υπάρχει element με data-field)
   const FIELD_KEYS = [
     'first_name','last_name','email','username','role','id_number','vat','user_id','status','full_name'
   ];
-
-  const DEMO = {
-    id: 'admin_001',
-    first_name: 'Admin',
-    last_name: 'Secretary',
-    email: 'admin@garage.com',
-    username: 'admin',
-    role: 'secretary',
-    id_number: '',
-    status: 'ACTIVE'
-  };
 
   const roleLabel = (r) => r==='secretary' ? 'Γραμματέας'
                     : r==='mechanic'   ? 'Μηχανικός'
@@ -43,45 +30,38 @@
 
   const norm = (u) => {
     if(!u) return null;
-    const first = u.first_name || u.firstName || u.given_name || '';
-    const last  = u.last_name  || u.lastName  || u.family_name || (u.surname||'');
-    const full  = u.full_name  || [first,last].filter(Boolean).join(' ').trim() || u.name || '';
+    const first = u.first_name || u.firstName || '';
+    const last  = u.last_name  || u.lastName  || '';
+    const full  = u.full_name  || [first,last].filter(Boolean).join(' ').trim();
     return {
-      id: u.id || u.user_id || u.uid,
+      id: u.id,
       first_name: first,
       last_name: last,
       full_name: full,
       email: u.email,
-      username: u.username || u.user_name,
+      username: u.username,
       role: u.role,
-      id_number: u.id_number || u.identity || u.vat || '',
-      status: u.status || (u.active===false?'INACTIVE':'ACTIVE'),
-      user_id: u.user_id || u.id || ''
+      id_number: u.id_card || u.id_number || '',
+      status: u.is_active ? 'ACTIVE' : 'INACTIVE',
+      user_id: u.id
     };
   };
 
-  let state = { data: null, editing: false };
+  const state = { data: null, editing: false };
 
   async function loadProfile(){
     try{
-      let raw = await api('/api/me').catch(()=>null);
-      if(!raw) raw = await api('/api/profile').catch(()=>null);
-      if(!raw) raw = await api('/api/users/me').catch(()=>null);
-
-      const d = norm(raw) || norm(DEMO);
+      const raw = await api('/api/users/me');
+      const d = norm(raw);
       state.data = d;
       render(d);
     }catch(err){
-      const d = norm(DEMO);
-      state.data = d;
-      render(d);
       console.error('profile load error:', err);
     }
   }
 
   function setField(key, val){
     $$(`[data-field="${key}"]`).forEach(el=>{
-      // ειδική μορφοποίηση
       if(key==='role') val = roleLabel(val);
       if(key==='status'){ el.innerHTML = statusBadge(val); return; }
       el.textContent = (val==null || val==='') ? 'N/A' : String(val);
@@ -90,25 +70,20 @@
   }
 
   function render(d){
-    // title/avatar/status
     if(avatar){
       const ini = initials(d.full_name || `${d.first_name} ${d.last_name}`.trim());
       avatar.textContent = ini || '–';
     }
     if(statusEl) statusEl.innerHTML = statusBadge(d.status);
-
     FIELD_KEYS.forEach(k => setField(k, d[k]));
-    // Fallbacks
     setField('full_name', d.full_name || `${d.first_name} ${d.last_name}`.trim());
-    setField('vat', d.id_number); // αν χρησιμοποιείς vat στο markup
+    setField('vat', d.id_number);
   }
 
   function enterEdit(){
     state.editing = true;
-    btnEdit?.classList.remove('ghost');
-    if(btnEdit) btnEdit.textContent = 'Αποθήκευση';
+    if(btnEdit) { btnEdit.classList.remove('ghost'); btnEdit.textContent = 'Αποθήκευση'; }
 
-    // Προσθέτουμε Cancel δίπλα (ελαφριά λύση χωρίς να αλλάξεις layout)
     if(!$('#btnProfileCancel')){
       const cancel = document.createElement('button');
       cancel.id = 'btnProfileCancel';
@@ -119,9 +94,8 @@
       cancel.addEventListener('click', exitEdit);
     }
 
-    // Μετατρέπουμε editable πεδία σε <input>
     $$('[data-field][data-editable="true"]').forEach(el=>{
-      if(el.querySelector('input')) return; // ήδη editable
+      if(el.querySelector('input')) return;
       const value = (el.textContent||'').trim();
       const input = document.createElement('input');
       input.className = 'input';
@@ -131,7 +105,6 @@
       el.appendChild(input);
     });
 
-    // δείξε (αν υπάρχει) τη φόρμα κωδικού
     pwdForm?.classList.remove('hidden');
   }
 
@@ -140,89 +113,75 @@
     if(btnEdit) btnEdit.textContent = 'Επεξεργασία';
     $('#btnProfileCancel')?.remove();
 
-    // Γυρνάμε τα inputs σε text
     $$('[data-field][data-editable="true"]').forEach(el=>{
       const inp = el.querySelector('input');
-      if(!inp){ return; }
+      if(!inp) return;
       const v = inp.value.trim();
       el.textContent = v || 'N/A';
       el.dataset.original = el.textContent;
     });
 
-    // κρύψε (αν υπάρχει) τη φόρμα κωδικού
     pwdForm?.classList.add('hidden');
   }
 
-  async function save(){
-    // μαζεύουμε μόνο ό,τι άλλαξε
+  function collectPatch(){
     const patch = {};
     $$('[data-field][data-editable="true"]').forEach(el=>{
       const key = el.dataset.field;
       const val = el.querySelector('input')?.value ?? '';
       const original = el.dataset.original ?? '';
-      if((val||'') !== (original==='N/A'?'':original)) patch[key] = val;
+      if((val||'') !== (original==='N/A'?'':original)) {
+        // map id_number -> id_card που περιμένει το backend
+        patch[key === 'id_number' ? 'id_card' : key] = val;
+      }
     });
+    return patch;
+  }
 
-    // τίποτα να στείλω
+  async function save(){
+    const patch = collectPatch();
     if(Object.keys(patch).length===0){ exitEdit(); return; }
 
-    // μικρά validations
     if(patch.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(patch.email)){
       alert('Μη έγκυρο email.'); return;
     }
 
     try{
-      const me = state.data || {};
-      // προσπάθησε /api/me, αλλιώς users/:id
-      let ok = false;
-      try{ await api('/api/me', {method:'PATCH', body:patch}); ok=true; }catch{}
-      if(!ok && me.id){ await api(`/api/users/${encodeURIComponent(me.id)}`, {method:'PATCH', body:patch}); }
-
-      // ανανέωση από server για σιγουριά
-      await loadProfile();
+      const updated = await api('/api/users/me', { method:'PATCH', body: patch });
+      state.data = norm(updated);
+      render(state.data);
       exitEdit();
       toast('Το προφίλ ενημερώθηκε.');
     }catch(err){
       console.error(err);
-      alert('Αποτυχία ενημέρωσης προφίλ.');
+      alert(err?.error || 'Αποτυχία ενημέρωσης προφίλ.');
     }
   }
 
-  // απλό toast αν υπάρχει .toast στο DOM, αλλιώς alert fallback
   function toast(msg){
-    let t = $('.toast');
-    if(!t){ alert(msg); return; }
-    t.textContent = msg; t.style.opacity = '1';
-    setTimeout(()=> t.style.opacity='0', 2200);
+    let t = $('.toast'); if(!t){ alert(msg); return; }
+    t.textContent = msg; t.classList.remove('hidden'); t.style.opacity='1';
+    setTimeout(()=>{ t.style.opacity='0'; }, 2200);
   }
 
-  // Password change (προαιρετικό, μόνο αν υπάρχει το form στο DOM)
   pwdForm?.addEventListener('submit', async (e)=>{
     e.preventDefault();
     const fd = new FormData(pwdForm);
-    const current = (fd.get('current')||'').toString();
-    const next = (fd.get('next')||'').toString();
+    const current_password = (fd.get('current')||'').toString();
+    const new_password = (fd.get('next')||'').toString();
     const confirm = (fd.get('confirm')||'').toString();
-    if(!current || !next || !confirm){ alert('Συμπλήρωσε όλα τα πεδία.'); return; }
-    if(next !== confirm){ alert('Ο νέος κωδικός δεν ταιριάζει.'); return; }
+    if(!current_password || !new_password || !confirm){ alert('Συμπλήρωσε όλα τα πεδία.'); return; }
+    if(new_password !== confirm){ alert('Οι νέοι κωδικοί δεν ταιριάζουν.'); return; }
     try{
-      let ok=false;
-      try{ await api('/api/me/password', {method:'POST', body:{current, next}}); ok=true; }catch{}
-      if(!ok && state.data?.id){
-        await api(`/api/users/${encodeURIComponent(state.data.id)}/password`, {method:'POST', body:{current, next}});
-      }
-      toast('Ο κωδικός άλλαξε.');
+      await api('/api/users/me/password', { method:'PATCH', body:{ current_password, new_password } });
       pwdForm.reset();
+      toast('Ο κωδικός άλλαξε.');
     }catch(err){
       console.error(err);
-      alert('Αποτυχία αλλαγής κωδικού.');
+      alert(err?.error || 'Αποτυχία αλλαγής κωδικού.');
     }
   });
 
-  // events
-  btnEdit?.addEventListener('click', ()=>{
-    if(!state.editing) enterEdit(); else save();
-  });
-
+  btnEdit?.addEventListener('click', ()=> state.editing ? save() : enterEdit());
   document.addEventListener('DOMContentLoaded', loadProfile);
 })();

@@ -445,5 +445,44 @@ body.auth-page .footer + .small{
 .toggle-pass:focus-visible{ outline:2px solid var(--primary); outline-offset:2px; }
 .toggle-pass svg{ width:20px; height:20px; display:block; }
 
+/* δεξιά πλευρά του navbar */
+.nav-right{
+  margin-left:auto;
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+
+/* user chip */
+.chip{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:6px 10px;
+  border-radius:999px;
+  background:rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.08);
+}
+.chip-initials{
+  width:26px; height:26px;
+  border-radius:50%;
+  display:grid; place-items:center;
+  font-weight:700;
+  background:rgba(59,130,246,.15);
+}
+.chip-text strong{ display:block; line-height:1; font-weight:600; }
+.chip-text small{ display:block; line-height:1; opacity:.75; font-size:12px; }
+
+/* κουμπιά (ταιριάζουν με τα δικά σου) */
+.btn.primary{ /* αν έχεις ήδη .btn με στυλ, άστο. Αλλιώς: */
+  padding:10px 16px;
+  border-radius:14px;
+}
+.btn.ghost{
+  background:transparent;
+  border:1px solid rgba(255,255,255,.18);
+  padding:8px 14px;
+  border-radius:14px;
+}
 
 
