@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="el">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Χρήστες · Γραμματέας · AutoFix</title>
+
+    <link rel="stylesheet" href="/css/style.css" />
+    <link rel="stylesheet" href="/css/dash.css" />
+    <link rel="stylesheet" href="/css/users-table.css">
+
+
+</head>
+
+<body>
+    <!-- NAVBAR -->
+    <div class="navbar">
+        <a class="brand" href="/">
+            <img class="brand-logo" src="/img/logo.png" alt="AutoFix">
+            <span>Μηχανουργείο AutoFix</span>
+        </a>
+        <div style="display:flex;gap:8px;align-items:center">
+            <span class="badge" id="navUser">—</span>
+            <button class="btn ghost" data-action="logout">Αποσύνδεση</button>
+        </div>
+    </div>
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+        <a href="/dashboard/secretary.html">
+            <span class="ico"><svg viewBox="0 0 24 24">
+                    <path fill="currentColor" d="M3 13h4v8H3zM10 3h4v18h-4zM17 8h4v13h-4z" />
+                </svg></span>
+            Πίνακας Ελέγχου
+        </a>
+        <a href="/dashboard/profile.html">
+            <span class="ico"><svg viewBox="0 0 24 24">
+                    <path fill="currentColor"
+                        d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5Zm0 2c-4.33 0-8 2.17-8 5v1h16v-1c0-2.83-3.67-5-8-5Z" />
+                </svg></span>
+            Προφίλ
+        </a>
+        <a class="active" href="/dashboard/users.html">
+            <span class="ico"><svg viewBox="0 0 24 24">
+                    <path fill="currentColor"
+                        d="M16 11a4 4 0 1 0-4-4 4 4 0 0 0 4 4ZM6 12a3 3 0 1 0-3-3 3 3 0 0 0 3 3Zm10 2c-3.33 0-7 1.67-7 5v2h14v-2c0-3.33-3.67-5-7-5ZM6 14c-2.67 0-6 1.33-6 4v3h7v-2.5c0-1.35.45-2.54 1.24-3.5C7.5 14.36 6.72 14 6 14Z" />
+                </svg></span>
+            Χρήστες
+        </a>
+        <a href="/dashboard/vehicles.html">
+            <span class="ico"><svg viewBox="0 0 24 24">
+                    <path fill="currentColor"
+                        d="M5 11l1.5-4.5A2 2 0 0 1 8.4 5h7.2a2 2 0 0 1 1.9 1.5L19 11h1a1 1 0 0 1 1 1v5h-2a2 2 0 0 1-4 0H9a2 2 0 0 1-4 0H3v-5a1 1 0 0 1 1-1Zm3 0h8l-1-3H9ZM7 17.5A1.5 1.5 0 1 0 8.5 16 1.5 1.5 0 0 0 7 17.5Zm10 0A1.5 1.5 0 1 0 18.5 16 1.5 1.5 0 0 0 17 17.5Z" />
+                </svg></span>
+            Οχήματα
+        </a>
+        <a href="/dashboard/appointments.html">
+            <span class="ico"><svg viewBox="0 0 24 24">
+                    <path fill="currentColor"
+                        d="M19 4h-1V2h-2v2H8V2H6v2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2Zm0 16H5V9h14v11Z" />
+                </svg></span>
+            Ραντεβού
+        </a>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="main">
+        <h1 class="page-title">Διαχείριση Χρηστών</h1>
+        <div class="subtitle">Manage system users and their permissions</div>
+
+        <div class="toolbar">
+            <input id="searchInput" class="input" type="search" placeholder="Αναζήτηση χρηστών..." />
+            <select id="roleSelect" class="select">
+                <option value="">Όλοι οι ρόλοι</option>
+                <option value="secretary">Γραμματέας</option>
+                <option value="customer">Πελάτης</option>
+                <option value="mechanic">Μηχανικός</option>
+            </select>
+            <span class="muted" id="totalInfo"></span>
+        </div>
+
+        <section class="card">
+            <section class="card users-wrap">
+  <div class="users-table" id="usersTable">
+    <!-- header -->
+    <div class="users-row users-head">
+      <div class="users-cell">USER</div>
+      <div class="users-cell">ΡΟΛΟΣ</div>
+      <div class="users-cell">ΚΑΤΑΣΤΑΣΗ</div>
+      <div class="users-cell">DETAILS</div>
+      <div class="users-cell" style="text-align:right">ΕΝΕΡΓΕΙΕΣ</div>
+    </div>
+    <!-- rows μπαίνουν δυναμικά -->
+  </div>
+
+  <div class="footer-pager">
+    <button id="btnPrev" class="btn small ghost">Προηγούμενα</button>
+    <div class="muted" id="pageInfo">Σελίδα 1</div>
+    <button id="btnNext" class="btn small">Επόμενα</button>
+  </div>
+</section>
+
+        </section>
+    </main>
+    <!-- Edit User Modal -->
+    <div id="editModal" class="modal hidden" aria-hidden="true">
+        <div class="modal-card">
+            <div class="modal-head">
+                <h3 id="editTitle">Επεξεργασία χρήστη</h3>
+                <button class="btn ghost" id="editClose">✕</button>
+            </div>
+            <form id="editForm" class="form-grid">
+                <label>Όνομα
+                    <input name="first_name" class="input" />
+                </label>
+                <label>Επώνυμο
+                    <input name="last_name" class="input" />
+                </label>
+                <label>Email
+                    <input name="email" type="email" class="input" />
+                </label>
+                <label>Username
+                    <input name="username" class="input" />
+                </label>
+                <label>Αριθμός Ταυτότητας
+                    <input name="id_card" class="input" />
+                </label>
+
+                <div id="editCustomer" class="role-extra hidden">
+                    <label>ΑΦΜ
+                        <input name="afm" class="input" />
+                    </label>
+                    <label>Διεύθυνση
+                        <input name="address" class="input" />
+                    </label>
+                </div>
+
+                <div id="editMechanic" class="role-extra hidden">
+                    <label>Ειδικότητα
+                        <input name="specialty" class="input" />
+                    </label>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn ghost" id="editCancel">Άκυρο</button>
+                    <button type="submit" class="btn">Αποθήκευση</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script defer src="/js/api.js"></script>
+    <script defer src="/js/auth-guard.js"></script>
+    <script defer src="/js/secretary.users.js"></script>
+</body>
+
+</html>

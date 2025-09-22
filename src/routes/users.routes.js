@@ -1,11 +1,14 @@
 const express = require('express');
 const router = express.Router();
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 
 const db = require('../db');
 const { isAuthenticated, hasRole } = require('../middleware/auth');
 
-// ---------- helpers ----------
+// -------- async error wrapper (να μη πέφτει ο server) --------
+const asyncH = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
+
+// -------- helpers --------
 function norm(u) {
   if (!u) return null;
   return {
@@ -17,7 +20,6 @@ function norm(u) {
     id_card: u.id_card,
     role: u.role,
     is_active: Number(u.is_active) ? 1 : 0,
-    // extras
     afm: u.afm || null,
     address: u.address || null,
     specialty: u.specialty || null,
@@ -37,49 +39,76 @@ async function getMeFull(uid) {
   return rows[0] || null;
 }
 
+// ---- dynamic password column detection ----
+const PASS_COL_CANDIDATES = [
+  'password','password_hash','passwd','pass','pwd','user_password','hashed_password'
+];
+let passwordColCache = null;
+
+async function getPasswordColumn() {
+  if (passwordColCache) return passwordColCache;
+  const inList = PASS_COL_CANDIDATES.map(c => `'${c}'`).join(',');
+  const [rows] = await db.execute(
+    `SELECT COLUMN_NAME FROM information_schema.COLUMNS
+     WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME='users'
+       AND COLUMN_NAME IN (${inList})`
+  );
+  // προτίμησε 'password' αν υπάρχει, αλλιώς το πρώτο που βρέθηκε
+  const found = rows.map(r => r.COLUMN_NAME);
+  passwordColCache = found.includes('password') ? 'password' : (found[0] || 'password');
+  return passwordColCache;
+}
+
+function looksHashed(s) {
+  return typeof s === 'string' && /^\$2[aby]\$/.test(s); // bcrypt
+}
+
+// ---- PARTIAL PATCH: συμπλήρωση ότι λείπει από την τρέχουσα εγγραφή ----
 async function updateUserCore(uid, payload) {
-  const first_name = (payload.first_name || '').trim();
-  const last_name  = (payload.last_name  || '').trim();
-  const email      = (payload.email      || '').trim();
-  const username   = (payload.username   || '').trim();
-  const id_card    = (payload.id_card || payload.id_number || '').trim() || null;
+  const [[cur]] = await db.execute(
+    'SELECT first_name,last_name,email,username,id_card FROM users WHERE id=?', [uid]
+  );
+
+  const first_name = (payload.first_name ?? cur?.first_name ?? '').trim();
+  const last_name  = (payload.last_name  ?? cur?.last_name  ?? '').trim();
+  const email      = (payload.email      ?? cur?.email      ?? '').trim();
+  const username   = (payload.username   ?? cur?.username   ?? '').trim();
+  const id_card    = (payload.id_card ?? payload.id_number ?? cur?.id_card ?? null);
 
   const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!first_name || !last_name || !username || !emailRe.test(email)) {
     const e = new Error('Λάθος ή ελλιπή πεδία.'); e.status = 400; throw e;
   }
 
-  // μοναδικότητα username / id_card
-  const [[u1]] = await db.execute(`SELECT id FROM users WHERE username=? AND id<>?`, [username, uid]);
-  if (u1) { const e = new Error('Το username χρησιμοποιείται ήδη.'); e.status = 409; throw e; }
-
-  if (id_card) {
-    const [[u2]] = await db.execute(`SELECT id FROM users WHERE id_card=? AND id<>?`, [id_card, uid]);
+  if (username !== cur.username) {
+    const [[u1]] = await db.execute('SELECT id FROM users WHERE username=? AND id<>?', [username, uid]);
+    if (u1) { const e = new Error('Το username χρησιμοποιείται ήδη.'); e.status = 409; throw e; }
+  }
+  if (id_card && id_card !== cur.id_card) {
+    const [[u2]] = await db.execute('SELECT id FROM users WHERE id_card=? AND id<>?', [id_card, uid]);
     if (u2) { const e = new Error('Ο Αριθμός Ταυτότητας υπάρχει ήδη.'); e.status = 409; throw e; }
   }
 
   await db.execute(
-    `UPDATE users SET first_name=?, last_name=?, email=?, username=?, id_card=? WHERE id=?`,
-    [first_name, last_name, email, username, id_card, uid]
+    'UPDATE users SET first_name=?, last_name=?, email=?, username=?, id_card=? WHERE id=?',
+    [first_name, last_name, email, username, id_card || null, uid]
   );
 
   return { first_name, last_name, email, username, id_card };
 }
 
 // ---------- ME (ο ίδιος ο χρήστης) ----------
-router.get('/me', isAuthenticated, async (req, res) => {
+router.get('/me', isAuthenticated, asyncH(async (req, res) => {
   const data = await getMeFull(req.session.user.id);
   res.json(norm(data));
-});
+}));
 
-router.patch('/me', isAuthenticated, async (req, res) => {
-  const uid = req.session.user.id;
+router.patch('/me', isAuthenticated, asyncH(async (req, res) => {
+  const uid  = req.session.user.id;
   const role = req.session.user.role;
 
-  // core fields
   await updateUserCore(uid, req.body || {});
 
-  // role extras
   if (role === 'customer') {
     const afm = req.body.afm || null;
     const address = req.body.address || null;
@@ -102,29 +131,31 @@ router.patch('/me', isAuthenticated, async (req, res) => {
 
   const updated = await getMeFull(uid);
   res.json(norm(updated));
-});
+}));
 
-router.patch('/me/password', isAuthenticated, async (req, res) => {
+router.patch('/me/password', isAuthenticated, asyncH(async (req, res) => {
   const uid = req.session.user.id;
   const { current_password = '', new_password = '' } = req.body || {};
   if (new_password.length < 8) return res.status(400).json({ error: 'Ο νέος κωδικός πρέπει να έχει τουλάχιστον 8 χαρακτήρες.' });
 
-  const [[user]] = await db.execute(`SELECT password FROM users WHERE id=?`, [uid]);
+  const col = await getPasswordColumn(); // <-- δυναμικό όνομα στήλης
+  const [[user]] = await db.execute(`SELECT \`${col}\` AS pwd FROM users WHERE id=?`, [uid]);
   if (!user) return res.status(404).json({ error: 'Χρήστης δεν βρέθηκε.' });
 
-  const ok = await bcrypt.compare(current_password, user.password || '');
+  const ok = looksHashed(user.pwd) ? await bcrypt.compare(current_password, user.pwd)
+                                   : (current_password === user.pwd);
   if (!ok) return res.status(401).json({ error: 'Λάθος τρέχων κωδικός.' });
 
   const hash = await bcrypt.hash(new_password, 10);
-  await db.execute(`UPDATE users SET password=? WHERE id=?`, [hash, uid]);
+  await db.execute(`UPDATE users SET \`${col}\`=? WHERE id=?`, [hash, uid]);
   res.json({ ok: true });
-});
+}));
 
-// ---------- SEC ONLY: edit άλλων χρηστών (προαιρετικό αλλά χρήσιμο) ----------
-router.patch('/:id', isAuthenticated, hasRole('secretary'), async (req, res) => {
+// ---------- SEC ONLY ----------
+router.patch('/:id', isAuthenticated, hasRole('secretary'), asyncH(async (req, res) => {
   const id = Number(req.params.id);
   await updateUserCore(id, req.body || {});
-  // χειρισμός extras αν έρθουν
+
   if ('afm' in (req.body||{}) || 'address' in (req.body||{})) {
     await db.execute(
       `INSERT INTO customers (user_id, afm, address)
@@ -143,21 +174,21 @@ router.patch('/:id', isAuthenticated, hasRole('secretary'), async (req, res) => 
   }
   const data = await getMeFull(id);
   res.json(norm(data));
-});
+}));
 
-router.patch('/:id/password', isAuthenticated, hasRole('secretary'), async (req, res) => {
+router.patch('/:id/password', isAuthenticated, hasRole('secretary'), asyncH(async (req, res) => {
   const id = Number(req.params.id);
   const { new_password = '' } = req.body || {};
   if (new_password.length < 8) return res.status(400).json({ error: 'Ο νέος κωδικός πρέπει να έχει τουλάχιστον 8 χαρακτήρες.' });
+
+  const col = await getPasswordColumn();
   const hash = await bcrypt.hash(new_password, 10);
-  await db.execute(`UPDATE users SET password=? WHERE id=?`, [hash, id]);
+  await db.execute(`UPDATE users SET \`${col}\`=? WHERE id=?`, [hash, id]);
   res.json({ ok: true });
-});
+}));
 
-// ---------- Υπάρχοντα endpoints (μένουν ως έχουν) ----------
-
-// Search users (secretary)
-router.get('/', isAuthenticated, hasRole('secretary'), async (req, res) => {
+// ---------- Υπάρχοντα endpoints ----------
+router.get('/', isAuthenticated, hasRole('secretary'), asyncH(async (req, res) => {
   const q = (req.query.query || '').trim();
   const page = Math.max(1, parseInt(req.query.page || '1'));
   const size = Math.min(50, Math.max(1, parseInt(req.query.size || '10')));
@@ -181,34 +212,32 @@ router.get('/', isAuthenticated, hasRole('secretary'), async (req, res) => {
     [q, like, like, like]
   );
   res.json({ items, page, pages: Math.ceil(cnt / size), total: cnt });
-});
+}));
 
-// Activate/Deactivate
-router.patch('/:id/activate', isAuthenticated, hasRole('secretary'), async (req, res) => {
+router.patch('/:id/activate', isAuthenticated, hasRole('secretary'), asyncH(async (req, res) => {
   const id = Number(req.params.id);
   const { active } = req.body;
-  await db.execute(`UPDATE users SET is_active=? WHERE id=?`, [active ? 1 : 0, id]);
+  await db.execute('UPDATE users SET is_active=? WHERE id=?', [active ? 1 : 0, id]);
   res.json({ message: 'Updated' });
-});
+}));
 
-// Delete user (secretary or self)
-router.delete('/:id', isAuthenticated, async (req, res) => {
+router.delete('/:id', isAuthenticated, asyncH(async (req, res) => {
   const id = Number(req.params.id);
   if (req.session.user.role !== 'secretary' && req.session.user.id !== id)
     return res.status(403).json({ error: 'Forbidden' });
-  await db.execute(`DELETE FROM users WHERE id=?`, [id]);
+  await db.execute('DELETE FROM users WHERE id=?', [id]);
   res.json({ message: 'Deleted' });
-});
+}));
 
-// COUNT
-router.get('/count', isAuthenticated, hasRole('secretary'), async (_req, res) => {
-  try {
-    const [[{ c }]] = await db.execute('SELECT COUNT(*) AS c FROM users');
-    res.json({ count: c });
-  } catch (err) {
-    console.error('users/count', err);
-    res.status(500).json({ error: 'Internal error' });
-  }
+router.get('/count', isAuthenticated, hasRole('secretary'), asyncH(async (_req, res) => {
+  const [[{ c }]] = await db.execute('SELECT COUNT(*) AS c FROM users');
+  res.json({ count: c });
+}));
+
+// -------- generic error handler --------
+router.use((err, _req, res, _next) => {
+  console.error('users.routes error:', err);
+  res.status(err.status || 500).json({ error: err.message || 'Internal error' });
 });
 
 module.exports = router;
