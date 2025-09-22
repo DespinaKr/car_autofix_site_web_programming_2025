@@ -101,3 +101,4 @@ INSERT INTO appointments (appt_code, customer_id, vehicle_id, mechanic_id, appt_
 ('APT001', (SELECT id FROM users WHERE username='john'), (SELECT id FROM vehicles WHERE serial_no='TOY123456789'), (SELECT id FROM users WHERE username='mike'),'2024-01-20','10:00','service',NULL,'CREATED',150),
 ('APT002', (SELECT id FROM users WHERE username='maria'), (SELECT id FROM vehicles WHERE serial_no='BMW987654321'), (SELECT id FROM users WHERE username='mike'),'2024-01-20','11:30','repair','Engine making strange noise','IN_PROGRESS',350),
 ('APT003', (SELECT id FROM users WHERE username='john'), (SELECT id FROM vehicles WHERE serial_no='MER456789123'), (SELECT id FROM users WHERE username='mike'),'2024-01-21','14:00','service',NULL,'COMPLETED',200);
+

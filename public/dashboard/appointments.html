@@ -4,41 +4,70 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Ραντεβού · AutoFix</title>
-  <link rel="stylesheet" href="/css/base.css" />
-  <link rel="stylesheet" href="/css/appointments.css" />
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/dash.css">
+  <link rel="stylesheet" href="/css/appointments.css"><!-- μόνο τα μικρά extras -->
 </head>
 <body class="dash">
-  <aside class="sidebar">
-    <a class="brand" href="/"><span class="logo">AF</span> Μηχανουργείο AutoFix</a>
-    <nav class="nav">
-      <a href="/dashboard/index.html"><span>Πίνακας Ελέγχου</span></a>
-      <a href="/dashboard/profile.html"><span>Προφίλ</span></a>
-      <a href="/dashboard/users.html"><span>Χρήστες</span></a>
-      <a href="/dashboard/vehicles.html"><span>Οχήματα</span></a>
-      <a class="active" href="/dashboard/appointments.html"><span>Ραντεβού</span></a>
-    </nav>
-    <div class="me">
-      <div id="meName">Admin Secretary</div>
-      <div class="role">Γραμματέας</div>
+<!-- NAVBAR -->
+  <div class="navbar">
+    <a class="brand" href="/">
+      <img class="brand-logo" src="/img/logo.png" alt="AutoFix">
+      <span>Μηχανουργείο AutoFix</span>
+    </a>
+    <div class="nav-right">
+      <span class="badge" id="navUser">—</span>
+      <button class="btn ghost" data-action="logout">Αποσύνδεση</button>
     </div>
+  </div>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <a href="/dashboard/secretary.html">
+      <span class="ico"><svg viewBox="0 0 24 24"><path fill="currentColor" d="M3 13h4v8H3zM10 3h4v18h-4zM17 8h4v13h-4z"/></svg></span>
+      Πίνακας Ελέγχου
+    </a>
+    <a href="/dashboard/profile.html">
+      <span class="ico"><svg viewBox="0 0 24 24"><path fill="currentColor" d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5Zm0 2c-4.33 0-8 2.17-8 5v1h16v-1c0-2.83-3.67-5-8-5Z"/></svg></span>
+      Προφίλ
+    </a>
+    <a href="/dashboard/users.html">
+      <span class="ico"><svg viewBox="0 0 24 24"><path fill="currentColor" d="M16 11a4 4 0 1 0-4-4 4 4 0 0 0 4 4ZM6 12a3 3 0 1 0-3-3 3 3 0 0 0 3 3Zm10 2c-3.33 0-7 1.67-7 5v2h14v-2c0-3.33-3.67-5-7-5ZM6 14c-2.67 0-6 1.33-6 4v3h7v-2.5c0-1.35.45-2.54 1.24-3.5C7.5 14.36 6.72 14 6 14Z"/></svg></span>
+      Χρήστες
+    </a>
+    <a href="/dashboard/vehicles.html">
+      <span class="ico"><svg viewBox="0 0 24 24"><path fill="currentColor" d="M5 11l1.5-4.5A2 2 0 0 1 8.4 5h7.2a2 2 0 0 1 1.9 1.5L19 11h1a1 1 0 0 1 1 1v5h-2a2 2 0 0 1-4 0H9a2 2 0 0 1-4 0H3v-5a1 1 0 0 1 1-1Zm3 0h8l-1-3H9ZM7 17.5A1.5 1.5 0 1 0 8.5 16 1.5 1.5 0 0 0 7 17.5Zm10 0A1.5 1.5 0 1 0 18.5 16 1.5 1.5 0 0 0 17 17.5Z"/></svg></span>
+      Οχήματα
+    </a>
+    <a class="active" href="/dashboard/appointments.html">
+      <span class="ico"><svg viewBox="0 0 24 24"><path fill="currentColor" d="M19 4h-1V2h-2v2H8V2H6v2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2Zm0 16H5V10h14v10Z"/></svg></span>
+      Ραντεβού
+    </a>
   </aside>
 
   <main class="main">
-    <header class="topbar">
-      <div class="lang">EL</div>
-      <div id="userChip" class="chip"></div>
-      <button id="btnLogout" class="btn btn--ghost">Αποσύνδεση</button>
-    </header>
+    
 
     <section class="wrap">
-      <div class="page-title">
-        <h1>Διαχείριση Ραντεβού</h1>
-        <p>Manage all customer appointments and scheduling</p>
+      <div class="page-header">
+      <div>
+        <h1 class="page-title">Διαχείριση Ραντεβού</h1>
+        <div class="subtitle">Διαχείριση όλων των ραντεβού πελατών</div>
       </div>
+      <div class="page-actions">
+  <button id="btnAdd" class="btn">+ Προσθήκη Ραντεβού</button>
+</div>
 
+      </div>
+    </div>
+
+      <!-- Toolbar (ίδια λογική με Vehicles) -->
       <div class="toolbar toolbar--grid">
         <div class="input input--withicon">
-          <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16a6.471 6.471 0 0 0 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5Zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14Z"/></svg>
+          <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
+            <path fill="currentColor"
+              d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16a6.471 6.471 0 0 0 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5Zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14Z"/>
+          </svg>
           <input id="q" placeholder="Αναζήτηση..." />
         </div>
 
@@ -51,16 +80,17 @@
         </select>
 
         <div class="input input--withicon">
-          <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M19 4h-1V2h-2v2H8V2H6v2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2Zm0 16H5V10h14v10Z"/></svg>
+          <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
+            <path fill="currentColor"
+              d="M19 4h-1V2h-2v2H8V2H6v2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2Zm0 16H5V10h14v10Z"/>
+          </svg>
           <input id="dateFilter" type="date" />
         </div>
 
-        <div class="grow"></div>
-        <button id="btnAdd" class="btn btn--primary">
-          <span class="plus">+</span> Προσθήκη Ραντεβού
-        </button>
+       <span id="totalInfo" class="muted"></span>
       </div>
 
+      <!-- Grid Καρτών (ίδιο με vehicles/users) -->
       <div id="apptGrid" class="cards"></div>
 
       <div class="pager">
@@ -71,76 +101,81 @@
     </section>
   </main>
 
-  <!-- Modal: Add/Edit Appointment -->
+  <!-- Modal: Add/Edit -->
   <div id="apptModal" class="modal" aria-hidden="true">
     <div class="modal__card">
       <div class="modal__head">
         <h2 id="modalTitle">Νέο Ραντεβού</h2>
         <button class="x" id="modalClose" aria-label="Κλείσιμο">×</button>
       </div>
+<form id="apptForm" class="form-grid">
+  <div class="col">
+    <label>Πελάτης (ID ή username)</label>
+    <input id="customer_ref" name="customer_ref" class="input" placeholder="π.χ. 7 ή john" />
+  </div>
 
-      <form id="apptForm" class="form-grid">
-        <div class="col">
-          <label>Πελάτης (ID ή username)</label>
-          <input id="customer_ref" name="customer_ref" class="input" placeholder="π.χ. 7 ή john" />
-        </div>
+  <div class="col">
+    <label>Όχημα</label>
+    <select id="vehicle_id" name="vehicle_id" class="input">
+      <option value="">— επιλέξτε πελάτη πρώτα —</option>
+    </select>
+  </div>
 
-        <div class="col">
-          <label>Όχημα</label>
-          <select id="vehicle_id" name="vehicle_id" class="input">
-            <option value="">— επιλέξτε πελάτη πρώτα —</option>
-          </select>
-        </div>
+  <div class="col">
+    <label>Ημ/νία & Ώρα</label>
+    <input id="dt" name="dt" type="datetime-local" class="input" />
+    <small class="hint">Ωράριο 08:00–16:00 (slot 2 ώρες, τελευταίο start 14:00)</small>
+  </div>
 
-        <div class="col">
-          <label>Ημ/νία & Ώρα</label>
-          <input id="dt" name="dt" type="datetime-local" class="input" />
-          <small class="hint">Ωράριο 08:00–16:00 (διάρκεια slot 2 ώρες)</small>
-        </div>
+  <div class="col">
+    <label>Λόγος</label>
+    <select id="reason" name="reason" class="input">
+      <option value="service">Σέρβις</option>
+      <option value="repair">Επιδιόρθωση</option>
+    </select>
+  </div>
 
-        <div class="col">
-          <label>Λόγος</label>
-          <select id="reason" name="reason" class="input">
-            <option value="service">Σέρβις</option>
-            <option value="repair">Επιδιόρθωση</option>
-          </select>
-        </div>
+  <!-- Πρόβλημα: μόνο όταν reason=repair -->
+  <div class="col" data-group="problem">
+    <label>Πρόβλημα (μόνο για επιδιόρθωση)</label>
+    <input id="problem" name="problem" class="input" placeholder="σύντομη περιγραφή" />
+  </div>
 
-        <div class="col">
-          <label>Πρόβλημα (μόνο για επιδιόρθωση)</label>
-          <input id="problem" name="problem" class="input" placeholder="σύντομη περιγραφή" />
-        </div>
+  <!-- Κατάσταση: στο create κρυφό/σταθερό CREATED -->
+  <div class="col" data-group="status">
+    <label>Κατάσταση</label>
+    <select id="status" name="status" class="input">
+      <option value="CREATED">Δημιουργημένο</option>
+      <option value="IN_PROGRESS">Σε εξέλιξη</option>
+      <option value="COMPLETED">Περατωμένο</option>
+      <option value="CANCELED">Ακυρωμένο</option>
+    </select>
+  </div>
 
-        <div class="col">
-          <label>Κατάσταση</label>
-          <select id="status" name="status" class="input">
-            <option value="CREATED">Δημιουργημένο</option>
-            <option value="IN_PROGRESS">Σε εξέλιξη</option>
-            <option value="COMPLETED">Περατωμένο</option>
-            <option value="CANCELED">Ακυρωμένο</option>
-          </select>
-        </div>
+  <!-- Τα δύο παρακάτω κρύβονται στο create -->
+  <div class="col" data-group="work">
+    <label>Εργασία</label>
+    <input id="work" name="work" class="input" placeholder="π.χ. Oil change" />
+  </div>
 
-        <div class="col">
-          <label>Εργασία (όταν είναι σε εξέλιξη)</label>
-          <input id="work" name="work" class="input" placeholder="π.χ. Oil change" />
-        </div>
+  <div class="col" data-group="cost">
+    <label>Κόστος (€)</label>
+    <input id="cost" name="cost" type="number" step="1" min="0" class="input" />
+  </div>
 
-        <div class="col">
-          <label>Κόστος (€)</label>
-          <input id="cost" name="cost" type="number" step="1" min="0" class="input" />
-        </div>
+  <div class="actions">
+    <button id="btnCancel" type="button" class="btn">Άκυρο</button>
+    <button id="btnSave" type="submit" class="btn btn--primary">Αποθήκευση</button>
+  </div>
+</form>
 
-        <div class="actions">
-          <button id="btnCancel" type="button" class="btn">Άκυρο</button>
-          <button id="btnSave" type="submit" class="btn btn--primary">Αποθήκευση</button>
-        </div>
-      </form>
+      
     </div>
   </div>
 
   <script src="/js/api.js"></script>
   <script src="/js/auth-guard.js"></script>
+  <script src="/js/nav-user.js"></script>
   <script src="/js/secretary.appointments.js"></script>
 </body>
 </html>

@@ -1,71 +1,151 @@
-/* public/css/appointments.css */
+/* =========================
+   Appointments UI (clean)
+   ========================= */
 
-.toolbar--grid {
-  display: grid;
-  grid-template-columns: minmax(220px, 420px) 220px 220px 1fr auto;
-  gap: 12px;
-  align-items: center;
-  margin-bottom: 18px;
+/* ---- Toolbar ---- */
+.toolbar{
+  display:grid;
+  grid-template-columns: 1.2fr 220px 220px 1fr auto;
+  gap:12px; align-items:center;
+  margin:8px 0 14px;
+}
+.toolbar .grow{ display:block }
+.toolbar .input{
+  background:transparent; border:1px solid #22345a;
+  border-radius:12px; padding:10px 12px; color:#eaf2ff;
+}
+.toolbar .input input{ background:transparent; border:0; color:inherit; width:100%; outline:none }
+.toolbar .input--withicon{ position:relative; display:flex; align-items:center; gap:8px }
+.toolbar .input--withicon .ico{ width:18px; height:18px; opacity:.8; flex:0 0 18px }
+.toolbar #dateFilter{ color:#eaf2ff; background:transparent; border:0; width:100%; outline:none }
+
+@media (max-width:980px){
+  .toolbar{ grid-template-columns: 1fr 1fr; }
+  .toolbar .grow{ display:none }
+  .toolbar > *:last-child{ grid-column:1/-1; justify-self:end; }
+}
+@media (max-width:640px){
+  .toolbar{ grid-template-columns: 1fr; }
+  .toolbar > *:last-child{ justify-self:stretch; }
 }
 
-.cards {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(280px,1fr));
-  gap: 16px;
+/* ---- Buttons ---- */
+.btn--primary{
+  padding:12px 16px; border-radius:12px;
+  background:linear-gradient(180deg,#3f66ff 0%,#2e5bff 70%);
+  color:#fff; border:0; font-weight:600; cursor:pointer;
+  box-shadow:0 10px 30px rgba(46,91,255,.35), inset 0 1px 0 rgba(255,255,255,.25);
+}
+.btn--primary:hover{ transform:translateY(-1px); filter:saturate(1.06) }
+.btn--primary:active{ transform:translateY(0) }
+
+.btn--ghost{
+  padding:10px 14px; border-radius:12px;
+  background:transparent; border:1px solid rgba(255,255,255,.18);
+  color:#cfe2ff; cursor:pointer;
+}
+.btn--ghost[disabled]{ opacity:.6; cursor:not-allowed }
+
+/* -----------------------------------
+   Cards grid (scoped): 3 → 2 → 1 cols
+   ----------------------------------- */
+#apptGrid.cards{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:18px;
+}
+@media (max-width:1200px){ #apptGrid.cards{ grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media (max-width:760px){  #apptGrid.cards{ grid-template-columns:1fr; } }
+
+/* ---- Appointment card ---- */
+.card.appt{
+  background:#0f1b31;               /* ίδιο με Vehicles */
+  border:1px solid #1b2947;
+  border-radius:16px;
+  padding:16px;
+  display:flex; flex-direction:column; gap:10px;
+  box-shadow:0 6px 24px rgba(0,0,0,.25);
 }
 
-.card.appt {
-  background: #0f1826;
-  border: 1px solid #1e2a40;
-  border-radius: 16px;
-  padding: 16px;
-  box-shadow: 0 4px 24px rgba(0,0,0,.25);
+/* Header */
+.appt__row{ display:flex; align-items:center; gap:12px }
+.appt__row--between{ justify-content:space-between }
+.appt__title{ font-weight:700; font-size:18px; color:#e9f0ff }
+
+/* Meta (ημερομηνία) με ellipsis ώστε να μη “σπάει” */
+.appt__meta{
+  color:#9fb1cf; font-size:.95rem;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  max-width:100%;
 }
 
-.appt .appt__head{
-  display:flex; align-items:center; gap:10px; margin-bottom:8px;
+/* Actions */
+.appt__actions{ display:flex; gap:12px; align-items:center }
+.appt__btn{
+  width:34px; height:34px; border-radius:10px; display:grid; place-items:center;
+  background:transparent; color:#cfe2ff; opacity:.9; cursor:pointer;
+  border:1px solid #22345a;
 }
-.av.av--cal{ width:36px; height:36px; border-radius:10px; background:#24314a; }
-.code{ font-weight:700; letter-spacing:.3px; }
-.tools{ margin-left:auto; display:flex; gap:8px; }
-.ico-btn{ background:transparent; border:0; color:#7ba2ff; cursor:pointer; font-size:16px; }
-.ico-btn.del{ color:#ff6b6b; }
+.appt__btn:hover{ opacity:1; transform:translateY(-1px); background:#13233d }
 
-.meta-row{ display:flex; gap:8px; align-items:center; margin-bottom:12px; }
-.dt{ margin-left:auto; opacity:.85; }
+/* Details grid: 2 cols (wide) → 1 (narrow) */
+.appt__grid{
+  display:grid; gap:6px 18px; margin-top:6px;
+  grid-template-columns:1fr 1fr;
+}
+@media (max-width:900px){ .appt__grid{ grid-template-columns:1fr } }
+.appt__label{ color:#9fb1cf; font-size:13px; font-weight:600 }
+.appt__value{ color:#cfe2ff }
 
-.row, .kv{ display:flex; gap:8px; margin:6px 0; }
-.kv span:first-child{ opacity:.75; min-width:110px; }
+/* ---- Badges ---- */
+.badge{
+  display:inline-flex; align-items:center; white-space:nowrap;
+  border-radius:999px; padding:4px 10px; border:1px solid #26406a;
+  font-size:12px; font-weight:700; gap:6px;
+}
+.badge--status--CREATED     { background:#1f2a44; color:#d7e6ff }
+.badge--status--IN_PROGRESS { background:#3b2d12; color:#ffd9a3 }
+.badge--status--COMPLETED   { background:#103a2b; color:#bff3cf }
+.badge--status--CANCELED    { background:#3a1620; color:#ffc7d1 }
+.badge--reason--service     { background:#0f2d1c; color:#beeed1 }
+.badge--reason--repair      { background:#401313; color:#ffb3b3 }
 
-.pill{ display:inline-flex; align-items:center; gap:6px; padding:.2rem .55rem; border-radius:999px; font-size:.85rem; }
-.pill--type{ background:#24314a; color:#b9c9ff; }
-.pill--created{ background:#253145; color:#9ec7ff; }
-.pill--progress{ background:#2b3f2b; color:#b2ebbc; }
-.pill--done{ background:#23363f; color:#a7f1ff; }
-.pill--cancel{ background:#44252b; color:#ffb2b2; }
+/* ---- Pager ---- */
+.pager{ display:flex; align-items:center; justify-content:space-between; margin-top:14px }
 
-.pager{ display:flex; gap:14px; align-items:center; justify-content:center; margin:22px 0; }
-
-.modal{ position:fixed; inset:0; display:none; align-items:center; justify-content:center; background:rgba(0,0,0,.5); }
-.modal.show{ display:flex; }
-.modal__card{ width:min(980px, 92vw); background:#0c1422; border:1px solid #1e2a40; border-radius:18px; box-shadow:0 30px 80px rgba(0,0,0,.5); }
-.modal__head{ display:flex; align-items:center; justify-content:space-between; padding:16px 18px; border-bottom:1px solid #1e2a40; }
-.modal__head h2{ margin:0; }
-.modal__head .x{ background:transparent; border:0; color:#a8b6d6; font-size:28px; cursor:pointer; }
-
+/* ---- Modal ---- */
+.modal[aria-hidden="true"]{ display:none }
+.modal{
+  position:fixed; inset:0; display:grid; place-items:center;
+  background:rgba(0,0,0,.45); z-index:2000;
+}
+.modal__card{
+  width:min(800px,95vw);
+  background:#0c172b; border:1px solid #1b2947; border-radius:16px;
+  padding:16px; box-shadow:0 10px 30px rgba(0,0,0,.5);
+}
+.modal__head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:10px }
+.modal__head h2{ margin:0 }
+.modal__head .x{
+  width:36px; height:36px; border-radius:10px; border:0; display:grid; place-items:center;
+  background:#12203a; color:#cfe2ff; cursor:pointer;
+}
 .form-grid{
-  padding:18px;
-  display:grid; gap:14px;
-  grid-template-columns: repeat(2, minmax(260px,1fr));
+  display:grid; grid-template-columns:1fr 1fr; gap:12px;
 }
-.form-grid .col{ display:flex; flex-direction:column; gap:6px; }
-.form-grid .hint{ opacity:.7; font-size:.85rem; }
-.form-grid .actions{ grid-column:1/-1; display:flex; justify-content:flex-end; gap:10px; margin-top:8px; }
+.form-grid .col{ display:grid; gap:6px }
+.form-grid label{ color:#cfe2ff }
+.form-grid .input, .form-grid input, .form-grid select{
+  background:transparent; border:1px solid #22345a; border-radius:12px; padding:10px 12px; color:#e8f0ff;
+}
+.form-grid .hint{ color:#9fb1cf }
+.form-grid .actions{
+  grid-column:1/-1; display:flex; justify-content:flex-end; gap:8px; margin-top:6px;
+}
+@media (max-width:760px){ .form-grid{ grid-template-columns:1fr } }
 
-@media (max-width: 1100px){
-  .cards{ grid-template-columns: repeat(2, minmax(260px,1fr)); }
-}
-@media (max-width: 760px){
-  .cards{ grid-template-columns: 1fr; }
-  .toolbar--grid{ grid-template-columns: 1fr; }
-}
+/* ---- Minor helpers ---- */
+.page-head{ display:flex; align-items:flex-end; justify-content:space-between; gap:16px; margin:8px 0 14px }
+.page-head h1{ font-size:42px; line-height:1; margin:0 }
+.page-head .subtitle{ color:#aeb8cc; margin:6px 0 0 }
+.muted{ color:#9fb1cf }
