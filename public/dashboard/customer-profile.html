@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="el">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Προφίλ · Πελάτης · AutoFix</title>
+
+  <link rel="stylesheet" href="/css/style.css"/>
+  <link rel="stylesheet" href="/css/dash.css"/>
+
+  <script defer src="/js/api.js"></script>
+  <script defer src="/js/auth-guard.js"></script>
+  <script defer src="/js/profile.me.js"></script>
+
+  <style>
+    .avatar-circle{width:84px;height:84px;border-radius:50%;display:grid;place-items:center;
+      font:700 28px/1 Inter,system-ui;background:linear-gradient(135deg,#2563eb33,#1e3a8a33);
+      border:1px solid rgba(255,255,255,.2);color:#eaf2ff}
+    .profile-header{display:flex;align-items:center;gap:14px}
+    .profile-actions{margin-left:auto}
+    .details-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+    .field{background:var(--panel);border:1px solid #1b2947;border-radius:12px;padding:12px}
+    .field b{display:block;color:#bdc8de;font-size:12px;margin-bottom:4px}
+    .hidden{display:none}
+    .input{width:100%;background:transparent;border:1px solid #22345a;border-radius:8px;padding:8px}
+  </style>
+</head>
+
+<body>
+  <!-- NAVBAR -->
+  <div class="navbar">
+    <a class="brand" href="/dashboard/customer.html">
+      <img class="brand-logo" src="/img/logo.png" alt="AutoFix logo">
+      <span>Μηχανουργείο AutoFix</span>
+    </a>
+    <div style="display:flex;gap:8px;align-items:center">
+      <span class="badge" id="navUser">—</span>
+      <button class="btn ghost" data-action="logout">Αποσύνδεση</button>
+    </div>
+  </div>
+
+  <main class="main">
+    <h1 class="page-title">Προφίλ</h1>
+    <div class="subtitle">Ενημέρωσε τα προσωπικά σου στοιχεία και τον κωδικό σου</div>
+
+    <!-- Κάρτα Προφίλ -->
+    <section class="card">
+      <div class="profile-header">
+        <div id="profileAvatar" class="avatar-circle">CU</div>
+        <div>
+          <h2 data-field="full_name">Customer</h2>
+          <div id="profileStatus"><span class="badge green">Ενεργός</span></div>
+        </div>
+        <div class="profile-actions">
+          <button class="btn" id="btnProfileEdit">Επεξεργασία</button>
+        </div>
+      </div>
+
+      <div class="details-grid" style="margin-top:14px">
+        <div class="field">
+          <b>Όνομα</b>
+          <div data-field="first_name" data-editable="true">—</div>
+        </div>
+        <div class="field">
+          <b>Επώνυμο</b>
+          <div data-field="last_name" data-editable="true">—</div>
+        </div>
+
+        <div class="field">
+          <b>Email</b>
+          <div data-field="email" data-editable="true">—</div>
+        </div>
+        <div class="field">
+          <b>Όνομα χρήστη</b>
+          <div data-field="username">—</div>
+        </div>
+
+        <div class="field">
+          <b>ΑΦΜ</b>
+          <div data-field="afm" data-editable="true">—</div>
+        </div>
+        <div class="field">
+          <b>Τηλέφωνο</b>
+          <div data-field="phone" data-editable="true">—</div>
+        </div>
+
+        <div class="field" style="grid-column:1 / -1">
+          <b>Διεύθυνση</b>
+          <div data-field="address" data-editable="true">—</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Ασφάλεια / Αλλαγή Κωδικού -->
+    <section class="card">
+      <div class="card-head"><h3>Ασφάλεια</h3></div>
+      <form id="pwdForm" class="hidden" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+        <div class="field">
+          <b>Τρέχων κωδικός</b>
+          <input class="input" type="password" name="current" placeholder="••••••••"/>
+        </div>
+        <div class="field">
+          <b>Νέος κωδικός</b>
+          <input class="input" type="password" name="next" placeholder="τουλάχιστον 8 χαρακτήρες"/>
+        </div>
+        <div class="field">
+          <b>Επανάληψη νέου</b>
+          <input class="input" type="password" name="confirm" placeholder="ξανά"/>
+        </div>
+        <div style="grid-column: 1 / -1; text-align:right;">
+          <button class="btn" type="submit">Αλλαγή κωδικού</button>
+        </div>
+      </form>
+      <div class="subtitle">Η φόρμα εμφανίζεται όταν πατήσεις «Επεξεργασία».</div>
+    </section>
+
+    <div class="toast hidden"></div>
+  </main>
+</body>
+</html>

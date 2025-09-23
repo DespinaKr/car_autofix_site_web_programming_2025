@@ -66,3 +66,33 @@
 .main .qa-blue  {background:linear-gradient(135deg,#2563eb,#1e3a8a)}
 .main .qa-green {background:linear-gradient(135deg,#16a34a,#065f46)}
 .main .qa-purple{background:linear-gradient(135deg,#8b5cf6,#6d28d9)}
+/* ---- Modal Overlay (common) ---- */
+.modal{
+  position: fixed;
+  inset: 0;                 /* top/right/bottom/left: 0 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(5,10,20,.6); /* σκοτεινό overlay */
+  z-index: 1000;               /* πάνω από navbar/περιεχόμενο */
+}
+
+/* κρυφό όταν aria-hidden="true" */
+.modal[aria-hidden="true"]{
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* κάρτα διαλόγου */
+.modal__dialog{
+  width: min(760px, 96vw);
+  max-height: 90vh;
+  overflow: auto;              /* scroll μέσα στο modal αν χρειαστεί */
+  border-radius: 16px;
+  box-shadow: 0 10px 40px rgba(0,0,0,.5);
+}
+
+/* προαιρετικά: όταν ανοίγει modal, κλείδωσε το scroll της σελίδας */
+body.modal-open{ overflow: hidden; }

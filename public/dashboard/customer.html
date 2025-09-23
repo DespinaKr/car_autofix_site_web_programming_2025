@@ -1,25 +1,152 @@
-<!doctype html><html lang="el"><head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Πίνακας Ελέγχου · Πελάτης</title>
-<link rel="stylesheet" href="/css/style.css">
-<script defer src="/js/api.js"></script>
-<script defer src="/js/auth-guard.js"></script>
-<script defer src="/js/customer.js"></script>
+<!doctype html>
+<html lang="el">
 
-</head><body>
-<div class="navbar">
-  <button class="btn ghost" onclick="document.body.classList.toggle('nav-open')">☰ Μενού</button>
-  <div class="brand"><span class="badge">AF</span> Μηχανοουργείο AutoFix</div>
-<button class="btn ghost" data-action="logout">Αποσύνδεση</button>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Πίνακας Ελέγχου · Πελάτης · AutoFix</title>
 
-</div>
-<div class="container">
-  <h2>Τα Ραντεβού μου</h2>
-  <div id="appts"></div>
-  <h2 style="margin-top:20px">Τα Οχήματά μου</h2>
-  <div id="vehicles"></div>
-</div>
-<script>
-async function logout(){ await api('/api/auth/logout',{method:'POST'}); location.href='/login.html'; }
-</script>
-</body></html>
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="stylesheet" href="/css/dash.css" />
+
+  <script defer src="/js/api.js"></script>
+  <script defer src="/js/auth-guard.js"></script>
+  <script defer src="/js/customer.js"></script>
+</head>
+
+<body>
+  <div class="navbar">
+    <a class="brand" href="/dashboard/customer.html">
+      <img class="brand-logo" src="/img/logo.png" alt="AutoFix logo">
+      <span>Μηχανουργείο AutoFix</span>
+    </a>
+
+    <div style="display:flex; gap:8px; align-items:center">
+      <a class="btn ghost" href="/dashboard/customer-profile.html">Προφίλ</a>
+      <span class="badge" id="navUser">—</span>
+      <button class="btn ghost" data-action="logout">Αποσύνδεση</button>
+    </div>
+  </div>
+
+
+  <main class="container">
+    <!-- Ραντεβού -->
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
+      <h2>Τα Ραντεβού μου</h2>
+      <button class="btn" id="btnNewAppt">+ Νέο Ραντεβού</button>
+    </div>
+    <div id="appts"></div>
+
+    <!-- Οχήματα -->
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:20px">
+      <h2>Τα Οχήματά μου</h2>
+      <button class="btn" id="btnNewVehicle">+ Προσθήκη Οχήματος</button>
+    </div>
+    <div id="vehicles"></div>
+  </main>
+
+  <!-- Modal: Νέο Ραντεβού -->
+  <div class="modal" id="mAppt" aria-hidden="true">
+    <div class="modal__dialog card" role="dialog" aria-modal="true" aria-labelledby="mApptTitle">
+      <div class="card-head" style="display:flex;justify-content:space-between;align-items:center">
+        <h3 id="mApptTitle">Νέο Ραντεβού</h3>
+        <button class="btn ghost" data-close="#mAppt">✕</button>
+      </div>
+      <form id="formAppt" class="grid cols-2" style="gap:12px">
+        <label class="field col-span-2">
+          <span class="label">Όχημα</span>
+          <select class="input" id="appt_vehicle" required></select>
+        </label>
+
+        <label class="field">
+          <span class="label">Ημ/νία & Ώρα</span>
+          <input class="input" type="datetime-local" id="appt_dt" required>
+          <small class="muted">Ωράριο 08:00–16:00 (slot 2 ώρες, τελευταίο ξεκίνημα 14:00)</small>
+        </label>
+
+        <label class="field">
+          <span class="label">Λόγος</span>
+          <select class="input" id="appt_reason" required>
+            <option value="service">Σέρβις</option>
+            <option value="repair">Επιδιόρθωση</option>
+          </select>
+        </label>
+
+        <label class="field col-span-2" id="grp_problem">
+          <span class="label">Πρόβλημα (μόνο για επιδιόρθωση)</span>
+          <textarea class="input" id="appt_problem" rows="3" placeholder="Σύντομη περιγραφή"></textarea>
+        </label>
+
+        <div class="col-span-2" style="display:flex;gap:8px;justify-content:flex-end">
+          <button type="button" class="btn ghost" data-close="#mAppt">Άκυρο</button>
+          <button class="btn" id="btnApptSave">Αποθήκευση</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Προσθήκη Οχήματος (μίνιμαλ) -->
+  <div class="modal" id="mVehicle" aria-hidden="true">
+    <div class="modal__dialog card" role="dialog" aria-modal="true" aria-labelledby="mVehTitle">
+      <div class="card-head" style="display:flex;justify-content:space-between;align-items:center">
+        <h3 id="mVehTitle">Προσθήκη Οχήματος</h3>
+        <button class="btn ghost" data-close="#mVehicle">✕</button>
+      </div>
+      <form id="formVehicle" class="grid cols-2" style="gap:12px">
+        <label class="field">
+          <span class="label">Μάρκα</span>
+          <input class="input" id="veh_brand" required>
+        </label>
+        <label class="field">
+          <span class="label">Μοντέλο</span>
+          <input class="input" id="veh_model" required>
+        </label>
+        <label class="field">
+          <span class="label">Τύπος</span>
+          <select class="input" id="veh_type" required>
+            <option value="passenger">passenger</option>
+            <option value="truck">truck</option>
+            <option value="bus">bus</option>
+          </select>
+        </label>
+        <label class="field">
+          <span class="label">Είδος κίνησης</span>
+          <select class="input" id="veh_engine" required>
+            <option value="diesel">diesel</option>
+            <option value="gasoline">gasoline</option>
+            <option value="hybrid">hybrid</option>
+            <option value="electric">electric</option>
+            <option value="lpg">lpg</option>
+          </select>
+        </label>
+        <label class="field">
+          <span class="label">Θύρες</span>
+          <input class="input" id="veh_doors" type="number" min="2" max="6" required>
+        </label>
+        <label class="field">
+          <span class="label">Ρόδες</span>
+          <input class="input" id="veh_wheels" type="number" min="2" max="8" required>
+        </label>
+        <label class="field">
+          <span class="label">Σειριακός αριθμός</span>
+          <input class="input" id="veh_serial" required>
+        </label>
+        <label class="field">
+          <span class="label">Έτος κτήσης</span>
+          <input class="input" id="veh_year" type="number" min="1990" max="2099" required>
+        </label>
+        <!-- Ημ/νία Κατασκευής -->
+        <label for="veh_prod_date" class="label">Ημ/νία κατασκευής</label>
+        <input id="veh_prod_date" type="date" class="input" required>
+
+
+        <div class="col-span-2" style="display:flex;gap:8px;justify-content:flex-end">
+          <button type="button" class="btn ghost" data-close="#mVehicle">Άκυρο</button>
+          <button class="btn" id="btnVehSave">Αποθήκευση</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</body>
+
+</html>

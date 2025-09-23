@@ -10,67 +10,81 @@ router.use((req, _res, next) => {
   next();
 });
 
-// Helper για «σήμερα» στην Australia/Perth (YYYY-MM-DD)
 function todayPerth() {
-  return new Date().toLocaleDateString('en-CA', { timeZone: 'Australia/Perth' });
+  return new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/Athens' });
 }
-
 /* =========================
    LIST / SEARCH (μένει πρώτο)
    ========================= */
+// LIST / SEARCH
 router.get('/', isAuthenticated, async (req, res) => {
   const u = req.session.user;
   const { from, to, status, query } = req.query;
   const recent = parseInt(req.query.recent || '0', 10) || 0;
-  const limit = Math.min(50, recent || 50);
 
-  let sql = `SELECT a.*,
-                    CONCAT(IFNULL(c.first_name,''),' ',IFNULL(c.last_name,''))  AS customer_name,
-                    CONCAT(IFNULL(m.first_name,''),' ',IFNULL(m.last_name,''))  AS mechanic_name,
-                    CONCAT(IFNULL(v.brand,''),' ',IFNULL(v.model,''))          AS vehicle_model
-             FROM appointments a
-             LEFT JOIN users    c ON c.id = a.customer_id
-             LEFT JOIN users    m ON m.id = a.mechanic_id
-             LEFT JOIN vehicles v ON v.id = a.vehicle_id
-             WHERE 1=1`;
+  const size  = Math.max(1, Math.min(50, parseInt(req.query.size || '6', 10)));
+  const page  = Math.max(1, parseInt(req.query.page || '1', 10));
+  const offset = (page - 1) * size;
+
+  let sql = `
+    SELECT
+      a.id, a.appt_code, a.customer_id, a.vehicle_id, a.mechanic_id,
+      DATE_FORMAT(a.appt_date,'%Y-%m-%d') AS appt_date,
+      TIME_FORMAT(a.appt_time,'%H:%i:%s') AS appt_time,
+      a.status, a.reason, a.problem_desc, a.total_cost, a.created_at,
+      CONCAT(IFNULL(c.first_name,''),' ',IFNULL(c.last_name,''))  AS customer_name,
+      CONCAT(IFNULL(m.first_name,''),' ',IFNULL(m.last_name,''))  AS mechanic_name,
+      CONCAT(IFNULL(v.brand,''),' ',IFNULL(v.model,''))           AS vehicle_model
+    FROM appointments a
+    LEFT JOIN users    c ON c.id = a.customer_id
+    LEFT JOIN users    m ON m.id = a.mechanic_id
+    LEFT JOIN vehicles v ON v.id = a.vehicle_id
+    WHERE 1=1`;
   const params = [];
 
-  if (from) { sql += ` AND a.appt_date >= ?`; params.push(from); }
-  if (to)   { sql += ` AND a.appt_date <= ?`; params.push(to); }
-  if (status && status !== 'ALL') { sql += ` AND a.status = ?`; params.push(status); }
+  if (from) { sql += ' AND a.appt_date >= ?'; params.push(from); }
+  if (to)   { sql += ' AND a.appt_date <= ?'; params.push(to); }
+
+  if (status && status !== 'ALL') { sql += ' AND a.status = ?'; params.push(status); }
 
   if (query) {
-    sql += ` AND (c.last_name LIKE ? OR c.id IN (SELECT user_id FROM customers WHERE afm LIKE ?))`;
-    params.push(`%${query}%`, `%${query}%`);
+    sql += ' AND (c.last_name LIKE ? OR c.id IN (SELECT user_id FROM customers WHERE afm LIKE ?))';
+    const like = `%${query}%`;
+    params.push(like, like);
   }
 
-  if (u.role === 'customer') { sql += ` AND a.customer_id=?`; params.push(u.id); }
-  if (u.role === 'mechanic') { sql += ` AND a.mechanic_id=?`; params.push(u.id); }
+  if (u.role === 'customer') { sql += ' AND a.customer_id = ?'; params.push(u.id); }
+  if (u.role === 'mechanic') { sql += ' AND a.mechanic_id = ?'; params.push(u.id); }
 
-  // Default μόνο αν δεν ζητάς φίλτρα/recent
-  if (!from && !to && !status && !query && !recent) {
-    const today = todayPerth();
-    sql += ` AND a.appt_date = ? AND a.status = 'CREATED'`;
-    params.push(today);
-  }
+  // DEFAULT: μόνο όταν ΔΕΝ έχεις ημερομηνία/αναζήτηση/“recent”
+  // - Αν status λείπει ή είναι ALL -> φίλτραρε στη ΣΗΜΕΡΙΝΗ μέρα (όλες οι καταστάσεις)
+  // - Αν υπάρχει status -> ΜΗΝ βάζεις ημερομηνία (φέρε ΟΛΑ για αυτό το status)
+  // --- ΒΓΑΛΤΟ ΤΕΛΕΙΩΣ ---
+// if (!from && !to && !query && !recent) {
+//   if (!status || status === 'ALL') {
+//     sql += ' AND a.appt_date = CURDATE()';
+//   }
+// }
+
 
   sql += recent
-    ? ` ORDER BY a.created_at DESC, a.appt_date DESC, a.appt_time DESC LIMIT ?`
-    : ` ORDER BY a.appt_date DESC, a.appt_time DESC LIMIT ?`;
-  params.push(limit);
+    ? ' ORDER BY a.created_at DESC, a.appt_date DESC, a.appt_time DESC, a.id DESC'
+    : ' ORDER BY a.appt_date DESC, a.appt_time DESC, a.id DESC';
+
+  sql += ' LIMIT ? OFFSET ?';
+  params.push(size, offset);
 
   const [rows] = await db.execute(sql, params);
-  const items = rows.map(r => {
-  const time5 = String(r.appt_time || '').slice(0,5); // HH:mm
-  return {
-    ...r,
-    appt_time: time5,
-    startsAt: `${r.appt_date}T${time5}`,
-  };
-});
-res.json({ items });
 
+  const items = rows.map(r => {
+    const time5 = String(r.appt_time || '').slice(0,5);
+    return { ...r, appt_time: time5, startsAt: `${r.appt_date}T${time5}` };
+  });
+
+  // (αν χρειάζεσαι total/pages, πρόσθεσε και δεύτερο COUNT(*) query)
+  res.json({ items });
 });
+
 
 /* ======================================================
    COUNTS (μπαίνουν πριν από param routes για σιγουριά)
@@ -92,12 +106,12 @@ router.get('/count', isAuthenticated, hasRole('secretary'), async (req, res) => 
 router.get('/today/count', isAuthenticated, hasRole('secretary'), async (req, res) => {
   try {
     const status = req.query.status || 'CREATED';
-    const today = todayPerth();
     const [[{ c }]] = await db.execute(
-      'SELECT COUNT(*) AS c FROM appointments WHERE appt_date = ? AND status = ?',
-      [today, status]
+      `SELECT COUNT(*) AS c FROM appointments WHERE appt_date = CURDATE() AND status = ?`,
+      [status]
     );
-    res.json({ count: c, date: today, status });
+    res.json({ count: c, status, date: new Date().toISOString().slice(0, 10) });
+
   } catch (err) {
     console.error('appointments/today/count', err);
     res.status(500).json({ error: 'Internal error' });
@@ -199,12 +213,12 @@ router.patch('/:id', isAuthenticated, hasRole('secretary'), async (req, res) => 
   const fields = [];
   const params = [];
   if (customer_id != null) { fields.push('customer_id = ?'); params.push(Number(customer_id)); }
-  if (vehicle_id  != null) { fields.push('vehicle_id = ?');  params.push(Number(vehicle_id)); }
-  if (appt_date)           { fields.push('appt_date = ?');   params.push(appt_date); }
-  if (appt_time)           { fields.push('appt_time = ?');   params.push(appt_time); }
-  if (reason)              { fields.push('reason = ?');      params.push(reason); }
-  if (problem_desc != null){ fields.push('problem_desc = ?');params.push(problem_desc || null); }
-  if (status)              { fields.push('status = ?');      params.push(status); }
+  if (vehicle_id != null) { fields.push('vehicle_id = ?'); params.push(Number(vehicle_id)); }
+  if (appt_date) { fields.push('appt_date = ?'); params.push(appt_date); }
+  if (appt_time) { fields.push('appt_time = ?'); params.push(appt_time); }
+  if (reason) { fields.push('reason = ?'); params.push(reason); }
+  if (problem_desc != null) { fields.push('problem_desc = ?'); params.push(problem_desc || null); }
+  if (status) { fields.push('status = ?'); params.push(status); }
 
   if (!fields.length) return res.status(400).json({ error: 'No changes' });
 
@@ -217,30 +231,60 @@ router.patch('/:id', isAuthenticated, hasRole('secretary'), async (req, res) => 
   res.json({ message: 'OK', id });
 });
 
+// HARD DELETE  (Secretary only)
+router.delete('/:id', isAuthenticated, hasRole('secretary'), async (req, res) => {
+  const id = Number(req.params.id);
+  try {
+    // σβήσε τυχόν child rows ώστε να μη σκάνε foreign keys
+    await db.execute(`DELETE FROM works WHERE appointment_id = ?`, [id]);
+    const [r] = await db.execute(`DELETE FROM appointments WHERE id = ?`, [id]);
+    if (!r.affectedRows) return res.status(404).json({ error: 'Not found' });
+    res.json({ message: 'Deleted' });
+  } catch (err) {
+    console.error('appointments DELETE', err);
+    res.status(500).json({ error: 'Internal error' });
+  }
+});
+
 /* ======================================================
    GET /:id  (το generic GET πάει μετά τα ειδικά)
    ====================================================== */
 router.get('/:id', isAuthenticated, async (req, res) => {
   const id = Number(req.params.id);
 
-  const sql = `SELECT a.*,
-                  CONCAT(IFNULL(c.first_name,''),' ',IFNULL(c.last_name,''))  AS customer_name,
-                  CONCAT(IFNULL(m.first_name,''),' ',IFNULL(m.last_name,''))  AS mechanic_name,
-                  CONCAT(IFNULL(v.brand,''),' ',IFNULL(v.model,''))          AS vehicle_model
-               FROM appointments a
-               LEFT JOIN users c ON c.id = a.customer_id
-               LEFT JOIN users m ON m.id = a.mechanic_id
-               LEFT JOIN vehicles v ON v.id = a.vehicle_id
-               WHERE a.id = ?`;
+  const sql = `
+    SELECT
+      a.id,
+      a.appt_code,
+      a.customer_id,
+      a.vehicle_id,
+      a.mechanic_id,
+      DATE_FORMAT(a.appt_date,'%Y-%m-%d') AS appt_date,
+      TIME_FORMAT(a.appt_time,'%H:%i:%s') AS appt_time,
+      a.status,
+      a.reason,
+      a.problem_desc,
+      a.total_cost,
+      a.created_at,
+      CONCAT(IFNULL(c.first_name,''),' ',IFNULL(c.last_name,''))  AS customer_name,
+      CONCAT(IFNULL(m.first_name,''),' ',IFNULL(m.last_name,''))  AS mechanic_name,
+      CONCAT(IFNULL(v.brand,''),' ',IFNULL(v.model,''))           AS vehicle_model
+    FROM appointments a
+    LEFT JOIN users    c ON c.id = a.customer_id
+    LEFT JOIN users    m ON m.id = a.mechanic_id
+    LEFT JOIN vehicles v ON v.id = a.vehicle_id
+    WHERE a.id = ?
+  `;
+
   const [rows] = await db.execute(sql, [id]);
   if (!rows.length) return res.status(404).json({ error: 'Not found' });
 
   const r = rows[0];
-const time5 = String(r.appt_time || '').slice(0,5);
-const item = { ...r, appt_time: time5, startsAt: `${r.appt_date}T${time5}` };
-return res.json(item);
-
+  const time5 = String(r.appt_time || '').slice(0, 5); // "HH:mm"
+  const item = { ...r, appt_time: time5, startsAt: `${r.appt_date}T${time5}` };
+  return res.json(item);
 });
+
 
 /* ======================================================
    CREATE & CANCEL (μπορούν να είναι στο τέλος)

@@ -1,4 +1,3 @@
-/* Secretary - Appointments (wired to your backend) */
 (function () {
   'use strict';
 
@@ -33,7 +32,7 @@
     }
   }
 
-
+  // ---------- state ----------
   let page = 1, pages = 1, size = 6;
   const state = { query: '', status: '', date: '' };
   let lastItems = [];
@@ -51,39 +50,38 @@
 
   // ---------- helpers ----------
   function debounce(fn, t = 200) { let to; return (...a) => { clearTimeout(to); to = setTimeout(() => fn(...a), t); }; }
- 
   function badgeStatus(s) { const x = document.createElement('span'); x.className = `badge badge--status--${s}`; x.textContent = GSTATUS[s] || s || '—'; return x; }
   function badgeReason(r) { const x = document.createElement('span'); x.className = `badge badge--reason--${r}`; x.textContent = GREASON[r] || r || '—'; return x; }
+
   // ---------------- TZ-safe helpers ----------------
-function pad2(n){ return String(n).padStart(2,'0'); }
+  function pad2(n) { return String(n).padStart(2, '0'); }
 
-// παίρνω "2024-01-20T14:00" ή "2024-01-20 14:00:00" και επιστρέφω "20/1/2024 στις 14:00"
-function fmt(dt){
-  if (!dt) return '—';
-  const s = String(dt).replace(' ', 'T');
-  const [dPart, tPartRaw=''] = s.split('T');
-  const [y,m,d] = dPart.split('-').map(Number);
-  const [hh='00',mm='00'] = tPartRaw.split(':');
-  if (!y || !m || !d) return '—';
-  return `${d}/${m}/${y} στις ${hh}:${mm}`;
-}
+  // παίρνω "2024-01-20T14:00" ή "2024-01-20 14:00:00" και επιστρέφω "20/1/2024 στις 14:00"
+  function fmt(dt) {
+    if (!dt) return '—';
+    const s = String(dt).replace(' ', 'T');
+    const [dPart, tPartRaw = ''] = s.split('T');
+    const [y, m, d] = dPart.split('-').map(Number);
+    const [hh = '00', mm = '00'] = tPartRaw.split(':');
+    if (!y || !m || !d) return '—';
+    return `${d}/${m}/${y} στις ${hh}:${mm}`;
+  }
 
-// "YYYY-MM-DD" + "HH:mm[:ss]" -> "YYYY-MM-DDTHH:mm"
-function normalizeStart(a){
-  const d = (a?.appt_date || '').slice(0,10);
-  let t = (a?.appt_time || '').slice(0,5);
-  if (!d || !t) return a?.startsAt || '';
-  return `${d}T${t}`;
-}
+  // "YYYY-MM-DD" + "HH:mm[:ss]" -> "YYYY-MM-DDTHH:mm"
+  function normalizeStart(a) {
+    const d = (a?.appt_date || '').slice(0, 10);
+    let t = (a?.appt_time || '').slice(0, 5);
+    if (!d || !t) return a?.startsAt || '';
+    return `${d}T${t}`;
+  }
 
-// από input value του datetime-local -> {date, time}
-function splitDT(v){
-  if (!v) return { date:'', time:'' };
-  const s = String(v).replace(' ', 'T');
-  const [date, timeRaw=''] = s.split('T');
-  return { date, time: timeRaw.slice(0,5) };
-}
-
+  // από input value του datetime-local -> {date, time}
+  function splitDT(v) {
+    if (!v) return { date: '', time: '' };
+    const s = String(v).replace(' ', 'T');
+    const [date, timeRaw = ''] = s.split('T');
+    return { date, time: timeRaw.slice(0, 5) };
+  }
 
   function isoDatePart(v) {
     if (!v) return '';
@@ -96,7 +94,7 @@ function splitDT(v){
     const d = new Date(v);
     return isNaN(d) ? '' : d.toISOString().slice(0, 10);
   }
- 
+
   function vehicleText(a) {
     const byLabel = a?.vehicle_label?.trim();
     if (byLabel) return byLabel;
@@ -118,152 +116,73 @@ function splitDT(v){
     if (mm) return mm;
     return a?.vehicle?.serial || a?.vehicle_serial || '—';
   }
+
   // --- dynamic customer → vehicles -----------------------------
+  function setVehiclePlaceholder(text = '— επιλέξτε πελάτη πρώτα —', disabled = true) {
+    const sel = F('#vehicle_id');
+    if (!sel) return;
+    sel.innerHTML = `<option value="">${text}</option>`;
+    sel.disabled = !!disabled;
+  }
 
-  // προσπαθεί να βρει userId από "7" ή "john"
+  // Εύρεση πελάτη από ID ή username
   async function resolveCustomerRef(ref) {
-    if (!ref) return null;
-    const raw = String(ref).trim();
-    // αν είναι καθαρός αριθμός, γύρνα τον
-    if (/^\d+$/.test(raw)) return Number(raw);
+    const v = String(ref || '').trim();
+    if (!v) return null;
+    if (/^\d+$/.test(v)) return Number(v); // καθαρό ID
 
-    // αλλιώς ψάξε χρήστη με username ή query
-    // ΔΟΚΙΜΑΖΕΙ πρώτα ?username=, μετά ?query= (ανάλογα τι υποστηρίζει ο users router σου)
+    // δοκίμασε users?username= και μετά users?query=
     try {
-      let res = await api(`/api/users?username=${encodeURIComponent(raw)}`);
-      if (Array.isArray(res?.items) && res.items.length) return res.items[0].id;
+      const r1 = await api(`/api/users?username=${encodeURIComponent(v)}`);
+      if (Array.isArray(r1?.items) && r1.items[0]?.id) return Number(r1.items[0].id);
     } catch { }
     try {
-      let res = await api(`/api/users?query=${encodeURIComponent(raw)}`);
-      if (Array.isArray(res?.items) && res.items.length) return res.items[0].id;
+      const r2 = await api(`/api/users?query=${encodeURIComponent(v)}`);
+      if (Array.isArray(r2?.items) && r2.items[0]?.id) return Number(r2.items[0].id);
     } catch { }
     return null;
   }
 
-  // φέρνει οχήματα για πελάτη και γεμίζει το <select id="vehicle_id">
-  async function populateVehicles(customerId, selectedId) {
+  // Γέμισμα dropdown οχημάτων για πελάτη
+  async function populateVehicles(userId, selectedId = null) {
     const sel = F('#vehicle_id');
     if (!sel) return;
 
-    if (!customerId) {
-      sel.innerHTML = `<option value="">— επιλέξτε πελάτη πρώτα —</option>`;
-      return;
-    }
+    if (!userId) return setVehiclePlaceholder('— επιλέξτε πελάτη πρώτα —', true);
 
-    // ο vehicles router σου πιθανόν δέχεται ένα από αυτά τα params
-    const tryUrls = [
-      `/api/vehicles?customer=${customerId}`,
-      `/api/vehicles?owner_id=${customerId}`,
-      `/api/vehicles?owner=${customerId}`,
-      `/api/vehicles?user_id=${customerId}`,
-    ];
+    sel.disabled = true;
+    sel.innerHTML = `<option value="">Φόρτωση...</option>`;
 
-    let items = [];
-    for (const u of tryUrls) {
-      try {
-        const r = await api(u);
-        if (Array.isArray(r?.items)) { items = r.items; break; }
-      } catch { /* δοκίμασε το επόμενο */ }
-    }
-
-    if (!items.length) {
-      sel.innerHTML = `<option value="">— δεν βρέθηκαν οχήματα —</option>`;
-      return;
-    }
-
-    // ωραία ετικέτα: brand + model ή ό,τι έχεις διαθέσιμο
-    const options = items.map(v => {
-      const brand = (v.brand ?? v.make ?? '').trim();
-      const model = (v.model ?? '').trim();
-      const label = [brand, model].filter(Boolean).join(' ') || (v.serial ?? v.plate ?? `#${v.id}`);
-      return `<option value="${v.id}">${label}</option>`;
-    }).join('');
-
-    sel.innerHTML = `<option value="">— επιλέξτε όχημα —</option>${options}`;
-    if (selectedId) sel.value = String(selectedId);
-  }
-  function setVehiclePlaceholder(text = '— επιλέξτε πελάτη πρώτα —', disabled = true) {
-  const sel = F('#vehicle_id');
-  if (!sel) return;
-  sel.innerHTML = `<option value="">${text}</option>`;
-  sel.disabled = !!disabled;
-}
-
-// Προσπάθησε να λύσεις ένα ref -> user id
-async function resolveCustomerRef(ref) {
-  const v = (ref || '').trim();
-  if (!v) return null;
-
-  // Αν είναι καθαρά νούμερο, το παίρνουμε ως id
-  if (/^\d+$/.test(v)) return Number(v);
-
-  // Αλλιώς δοκίμασε endpoint επίλυσης (προσαρμοσμένο στα δικά σου routes)
-  try {
-    // Αν έχεις /api/users/resolve?ref=...
-    const r1 = await api(`/api/users/resolve?ref=${encodeURIComponent(v)}`);
-    if (r1?.id) return Number(r1.id);
-  } catch {}
-
-  try {
-    // fallback: αν έχεις /api/users?ref=...
-    const r2 = await api(`/api/users?ref=${encodeURIComponent(v)}`);
-    if (r2?.id) return Number(r2.id);
-    if (Array.isArray(r2?.items) && r2.items[0]?.id) return Number(r2.items[0].id);
-  } catch {}
-
-  return null;
-}
-
-// Φέρε οχήματα για userId και γέμισε dropdown
-async function populateVehicles(userId, selectedId = null) {
-  const sel = F('#vehicle_id');
-  if (!sel) return;
-
-  if (!userId) {
-    setVehiclePlaceholder('— επιλέξτε πελάτη πρώτα —', true);
-    return;
-  }
-
-  sel.disabled = true;
-  sel.innerHTML = `<option value="">Φόρτωση...</option>`;
-
-  // Προσαρμόσε το param στο δικό σου API: owner_id ή customer_id
-  let data;
-  try {
-    // παίζει συνήθως ένα από τα δύο:
+    let data;
     try {
-      data = await api(`/api/vehicles?owner_id=${userId}`);
+      // Δοκίμασε 2 συνηθισμένα params του API σας
+      try { data = await api(`/api/vehicles?owner_id=${userId}`); }
+      catch { data = await api(`/api/vehicles?customer_id=${userId}`); }
     } catch {
-      data = await api(`/api/vehicles?customer_id=${userId}`);
+      return setVehiclePlaceholder('— δεν βρέθηκαν οχήματα —', true);
     }
-  } catch {
-    setVehiclePlaceholder('— δεν βρέθηκαν οχήματα —', true);
-    return;
+
+    const items = Array.isArray(data?.items) ? data.items : (Array.isArray(data) ? data : []);
+    if (!items.length) return setVehiclePlaceholder('— δεν βρέθηκαν οχήματα —', true);
+
+    sel.disabled = false;
+    sel.innerHTML = [
+      `<option value="">— επιλέξτε όχημα —</option>`,
+      ...items.map(v => {
+        const label = [v.brand || v.make || '', v.model || ''].filter(Boolean).join(' ')
+          || (v.serial || v.plate || `#${v.id}`);
+        const selected = selectedId && Number(selectedId) === Number(v.id) ? ' selected' : '';
+        return `<option value="${v.id}"${selected}>${label}</option>`;
+      })
+    ].join('');
   }
-
-  const items = Array.isArray(data?.items) ? data.items : (Array.isArray(data) ? data : []);
-  if (!items.length) {
-    setVehiclePlaceholder('— δεν βρέθηκαν οχήματα —', true);
-    return;
-  }
-
-  sel.disabled = false;
-  sel.innerHTML = items.map(v => {
-    const label = [v.brand || v.make || '', v.model || ''].filter(Boolean).join(' ') || (v.serial || v.plate || `#${v.id}`);
-    return `<option value="${v.id}" ${selectedId && Number(selectedId) === Number(v.id) ? 'selected' : ''}>${label}</option>`;
-  }).join('');
-}
-
-
 
   // ---------- LOAD ----------
   async function load() {
     const p = new URLSearchParams();
     if (state.query) p.set('query', state.query);
     if (state.status && state.status !== 'ALL') p.set('status', state.status);
-    if (state.date) p.set('from', state.date), p.set('to', state.date);
-    if (!state.query && !state.date && !(state.status && state.status !== 'ALL')) p.set('recent', '50');
-
+    if (state.date) { p.set('from', state.date); p.set('to', state.date); }
     p.set('page', String(page));
     p.set('size', String(size));
 
@@ -309,15 +228,18 @@ async function populateVehicles(userId, selectedId = null) {
       const head = document.createElement('div');
       head.className = 'appt__row appt__row--between';
       head.innerHTML = `
-        <div class="appt__title">${code}</div>
-        <div class="appt__actions" data-id="${id}">
-          <button class="appt__btn js-edit" title="Επεξεργασία">
-            <svg class="ico" viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M5 19h14v2H5zM19.71 7.04a1.003 1.003 0 0 0 0-1.42l-1.34-1.34a1.003 1.003 0 0 0-1.42 0L9 11.83V15h3.17l7.54-7.96z"/></svg>
-          </button>
-          <button class="appt__btn js-cancel" title="Ακύρωση">
-            <svg class="ico" viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M6 7h12v2H6zM8 10h8l-1 10H9zM9 4h6l1 2H8z"/></svg>
-          </button>
-        </div>`;
+  <div class="appt__title">${code}</div>
+  <div class="appt__actions" data-id="${id}">
+    <button class="appt__btn js-edit" title="Επεξεργασία">
+      <svg class="ico" viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M5 19h14v2H5zM19.71 7.04a1.003 1.003 0 0 0 0-1.42l-1.34-1.34a1.003 1.003 0 0 0-1.42 0L9 11.83V15h3.17l7.54-7.96z"/></svg>
+    </button>
+    <button class="appt__btn js-delete" title="Οριστική διαγραφή">
+      <svg class="ico" viewBox="0 0 24 24" width="18" height="18">
+        <path fill="currentColor" d="M6 7h12v2H6zM8 10h8l-1 10H9zM9 4h6l1 2H8z"/>
+      </svg>
+    </button>
+  </div>`;
+
       card.appendChild(head);
 
       const meta = document.createElement('div');
@@ -359,8 +281,9 @@ async function populateVehicles(userId, selectedId = null) {
     if (!btn) return;
     const id = Number(btn.closest('.appt__actions')?.dataset.id);
     if (btn.classList.contains('js-edit')) openEdit(id);
-    if (btn.classList.contains('js-cancel')) cancelAppt(id);
+    if (btn.classList.contains('js-delete')) deleteAppt(id);  // <-- νέο
   });
+
 
   // ---------- modal ----------
   function openModal() { modal.setAttribute('aria-hidden', 'false'); }
@@ -386,7 +309,7 @@ async function populateVehicles(userId, selectedId = null) {
 
     // καθάρισε customer & vehicles
     if (F('#customer_ref')) F('#customer_ref').value = '';
-    if (F('#vehicle_id')) F('#vehicle_id').innerHTML = `<option value="">— επιλέξτε πελάτη πρώτα —</option>`;
+    setVehiclePlaceholder('— επιλέξτε πελάτη πρώτα —', true);
 
     // προεπιλογή reason=service και sync «Πρόβλημα»
     if (F('#reason')) F('#reason').value = 'service';
@@ -395,6 +318,26 @@ async function populateVehicles(userId, selectedId = null) {
     openModal();
   });
 
+  // Πελάτης -> φόρτωση οχημάτων
+  F('#customer_ref')?.addEventListener('change', onCustomerRefChange);
+  F('#customer_ref')?.addEventListener('blur', onCustomerRefChange);
+  F('#customer_ref')?.addEventListener('keydown', (e) => { if (e.key === 'Enter') onCustomerRefChange(); });
+  async function onCustomerRefChange() {
+    const ref = F('#customer_ref')?.value?.trim();
+    if (!ref) { form.dataset.customerId = ''; setVehiclePlaceholder('— επιλέξτε πελάτη πρώτα —', true); return; }
+    const uid = await resolveCustomerRef(ref);
+    if (!uid) {
+      form.dataset.customerId = '';
+      setVehiclePlaceholder('— δεν βρέθηκε πελάτης —', true);
+      toast && toast('Δεν βρέθηκε πελάτης με αυτό το αναγνωριστικό');
+      return;
+    }
+    form.dataset.customerId = String(uid);
+    await populateVehicles(uid, null);
+  }
+
+  // Reason toggle
+  F('#reason')?.addEventListener('change', toggleProblem);
 
   // ---------- open edit ----------
   async function openEdit(id) {
@@ -437,52 +380,75 @@ async function populateVehicles(userId, selectedId = null) {
     // sync το "Πρόβλημα" και άνοιξε modal
     toggleProblem();
     openModal();
-
   }
 
   // ---------- submit (create/update) ----------
-  // ---------- submit (create/update) ----------
-form?.addEventListener('submit', async (ev) => {
-  ev.preventDefault();
+  form?.addEventListener('submit', async (ev) => {
+    ev.preventDefault();
 
-  // διάβασε date/time από το datetime-local
-  const { date, time } = splitDT(F('#dt') ? F('#dt').value : '');
-
-  // λύσε τον πελάτη από dataset (ή επί τόπου από το input αν δεν έχει γίνει change)
-  let userIdResolved = Number(form.dataset.customerId || 0) || undefined;
-  if (!userIdResolved) {
-    const _ref = F('#customer_ref')?.value?.trim() || '';
-    const maybe = await resolveCustomerRef(_ref);
-    if (maybe) userIdResolved = Number(maybe);
-  }
-
-  // φτιάξε το βασικό body
-  const patchBody = {
-    customer_id: userIdResolved,
-    vehicle_id: Number(F('#vehicle_id')?.value || 0) || undefined,
-    appt_date: date || undefined,
-    appt_time: time || undefined,
-    reason: F('#reason')?.value || undefined,
-    problem_desc: F('#problem')?.value ?? null,  // παραμένει null αν δεν έχεις repair
-    status: F('#status')?.value || undefined,
-  };
-  // πέτα τα undefined keys
-  Object.keys(patchBody).forEach(k => patchBody[k] === undefined && delete patchBody[k]);
-
-  try {
+    const { date, time } = splitDT(F('#dt') ? F('#dt').value : '');
     const id = Number(form.dataset.id || 0);
+    const isCreate = !id;
 
-    // CREATE ή UPDATE
-    if (id) {
-      await api(`/api/appointments/${id}`, { method: 'PATCH', body: patchBody });
-    } else {
-      await api(`/api/appointments`, { method: 'POST', body: patchBody });
+    // resolve πελάτη
+    let userIdResolved = Number(form.dataset.customerId || 0) || undefined;
+    if (!userIdResolved) {
+      const maybe = await resolveCustomerRef(F('#customer_ref')?.value || '');
+      if (maybe) userIdResolved = Number(maybe);
     }
 
-    // ---- Εργασίες / Κόστος (ΜΟΝΟ στο edit) ----
-    if (id) {
+    // Validation μόνο στο create
+    if (isCreate) {
+      if (!date || !time) { alert('Συμπλήρωσε ημερομηνία & ώρα.'); return; }
+      if (!userIdResolved) { alert('Δώσε έγκυρο πελάτη.'); return; }
+      if (!Number(F('#vehicle_id')?.value || 0)) { alert('Επίλεξε όχημα.'); return; }
+      const reasonNow = F('#reason')?.value || 'service';
+      if (reasonNow === 'repair' && !(F('#problem')?.value || '').trim()) {
+        alert('Για επιδιόρθωση απαιτείται περιγραφή προβλήματος.');
+        return;
+      }
+    }
+
+    // σώματα κλήσεων
+    if (isCreate) {
+      const body = {
+        customer_id: userIdResolved,
+        vehicle_id: Number(F('#vehicle_id')?.value || 0),
+        appt_date: date,
+        appt_time: time,
+        reason: F('#reason')?.value || 'service',
+        problem_desc: (F('#reason')?.value === 'repair') ? (F('#problem')?.value || '') : (F('#problem')?.value ?? null),
+      };
+      try {
+        await api(`/api/appointments`, { method: 'POST', body });
+        closeModal();
+        load();
+        toast && toast('Το ραντεβού δημιουργήθηκε.');
+      } catch (err) {
+        console.error(err);
+        alert(err?.error || 'Αποτυχία δημιουργίας ραντεβού.');
+      }
+      return;
+    }
+
+    // UPDATE (edit)
+    const patchBody = {
+      customer_id: userIdResolved,
+      vehicle_id: Number(F('#vehicle_id')?.value || 0) || undefined,
+      appt_date: date || undefined,
+      appt_time: time || undefined,
+      reason: F('#reason')?.value || undefined,
+      problem_desc: F('#problem')?.value ?? null,
+      status: F('#status')?.value || undefined,
+    };
+    Object.keys(patchBody).forEach(k => patchBody[k] === undefined && delete patchBody[k]);
+
+    try {
+      await api(`/api/appointments/${id}`, { method: 'PATCH', body: patchBody });
+
+      // ---- Εργασίες / Κόστος (ΜΟΝΟ στο edit) ----
       const origTotal = Number(form.dataset.origTotal || 0);
-      const workText  = (F('#work')?.value || '').trim();
+      const workText = (F('#work')?.value || '').trim();
 
       // δέχεσαι και κόμμα ως δεκαδικό
       const costStrRaw = (F('#cost')?.value || '').trim().replace(',', '.');
@@ -512,30 +478,40 @@ form?.addEventListener('submit', async (ev) => {
       }
 
       if (calls.length) await Promise.all(calls);
+
+      closeModal();
+      load();
+      toast && toast('Αποθηκεύτηκε.');
+    } catch (err) {
+      console.error(err);
+      alert(err?.error || 'Αποτυχία αποθήκευσης.');
     }
-
-    closeModal();
-    load();
-    toast('Αποθηκεύτηκε.');
-  } catch (err) {
-    console.error(err);
-    alert(err?.error || 'Αποτυχία αποθήκευσης.');
-  }
-});
-
-
+  });
 
   // ---------- cancel (αντί για hard delete) ----------
   async function cancelAppt(id) {
     if (!confirm('Ακύρωση ραντεβού;')) return;
     try {
       await api(`/api/appointments/${id}/cancel`, { method: 'POST' });
-      load(); toast('Ακυρώθηκε.');
+      load(); toast && toast('Ακυρώθηκε.');
     } catch (err) {
       console.error(err);
       alert(err?.error || 'Αποτυχία ακύρωσης.');
     }
   }
+
+  async function deleteAppt(id) {
+    if (!confirm('Οριστική διαγραφή ραντεβού;\nΗ ενέργεια δεν αναιρείται.')) return;
+    try {
+      await api(`/api/appointments/${id}`, { method: 'DELETE' });
+      load();
+      toast && toast('Διαγράφηκε.');
+    } catch (err) {
+      console.error(err);
+      alert(err?.error || 'Αποτυχία διαγραφής.');
+    }
+  }
+
 
   // ---------- init ----------
   document.addEventListener('DOMContentLoaded', load);

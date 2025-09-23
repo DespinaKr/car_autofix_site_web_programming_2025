@@ -41,7 +41,7 @@ async function getMeFull(uid) {
 
 // ---- dynamic password column detection ----
 const PASS_COL_CANDIDATES = [
-  'password','password_hash','passwd','pass','pwd','user_password','hashed_password'
+  'password', 'password_hash', 'passwd', 'pass', 'pwd', 'user_password', 'hashed_password'
 ];
 let passwordColCache = null;
 
@@ -70,10 +70,10 @@ async function updateUserCore(uid, payload) {
   );
 
   const first_name = (payload.first_name ?? cur?.first_name ?? '').trim();
-  const last_name  = (payload.last_name  ?? cur?.last_name  ?? '').trim();
-  const email      = (payload.email      ?? cur?.email      ?? '').trim();
-  const username   = (payload.username   ?? cur?.username   ?? '').trim();
-  const id_card    = (payload.id_card ?? payload.id_number ?? cur?.id_card ?? null);
+  const last_name = (payload.last_name ?? cur?.last_name ?? '').trim();
+  const email = (payload.email ?? cur?.email ?? '').trim();
+  const username = (payload.username ?? cur?.username ?? '').trim();
+  const id_card = (payload.id_card ?? payload.id_number ?? cur?.id_card ?? null);
 
   const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!first_name || !last_name || !username || !emailRe.test(email)) {
@@ -104,14 +104,14 @@ router.get('/me', isAuthenticated, asyncH(async (req, res) => {
 }));
 
 router.patch('/me', isAuthenticated, asyncH(async (req, res) => {
-  const uid  = req.session.user.id;
+  const uid = req.session.user.id;
   const role = req.session.user.role;
 
   await updateUserCore(uid, req.body || {});
 
   if (role === 'customer') {
-    const afm = req.body.afm || null;
-    const address = req.body.address || null;
+    const afm = ('afm' in req.body) ? (req.body.afm || '') : '';
+    const address = ('address' in req.body) ? (req.body.address || '') : '';
     if (afm && !/^\d{9}$/.test(String(afm))) return res.status(400).json({ error: 'Μη έγκυρο ΑΦΜ.' });
     await db.execute(
       `INSERT INTO customers (user_id, afm, address)
@@ -143,7 +143,7 @@ router.patch('/me/password', isAuthenticated, asyncH(async (req, res) => {
   if (!user) return res.status(404).json({ error: 'Χρήστης δεν βρέθηκε.' });
 
   const ok = looksHashed(user.pwd) ? await bcrypt.compare(current_password, user.pwd)
-                                   : (current_password === user.pwd);
+    : (current_password === user.pwd);
   if (!ok) return res.status(401).json({ error: 'Λάθος τρέχων κωδικός.' });
 
   const hash = await bcrypt.hash(new_password, 10);
@@ -156,7 +156,7 @@ router.patch('/:id', isAuthenticated, hasRole('secretary'), asyncH(async (req, r
   const id = Number(req.params.id);
   await updateUserCore(id, req.body || {});
 
-  if ('afm' in (req.body||{}) || 'address' in (req.body||{})) {
+  if ('afm' in (req.body || {}) || 'address' in (req.body || {})) {
     await db.execute(
       `INSERT INTO customers (user_id, afm, address)
        VALUES (?, ?, ?)
@@ -164,7 +164,7 @@ router.patch('/:id', isAuthenticated, hasRole('secretary'), asyncH(async (req, r
       [id, req.body.afm || null, req.body.address || null]
     );
   }
-  if ('specialty' in (req.body||{})) {
+  if ('specialty' in (req.body || {})) {
     await db.execute(
       `INSERT INTO mechanics (user_id, specialty)
        VALUES (?, ?)
