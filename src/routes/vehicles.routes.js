@@ -3,17 +3,29 @@ const router = express.Router();
 const db = require('../db');
 const { isAuthenticated, hasRole } = require('../middleware/auth');
 
-function canManage(user, owner_id){
+// async handler wrapper (ίδιο με των άλλων routers)
+const asyncH = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
+
+function canManage(user, owner_id) {
   return user.role === 'secretary' || user.id === owner_id;
+}
+
+async function tableExists(name) {
+  const [[row]] = await db.execute(
+    `SELECT COUNT(*) AS c
+       FROM information_schema.TABLES
+      WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ?`, [name]
+  );
+  return Number(row.c) > 0;
 }
 
 // List/search
 router.get('/', isAuthenticated, async (req, res) => {
-  const q = (req.query.query||'').trim();
-  const type = (req.query.type||'').trim();
+  const q = (req.query.query || '').trim();
+  const type = (req.query.type || '').trim();
   const page = Math.max(1, parseInt(req.query.page || '1'));
   const size = Math.min(50, Math.max(1, parseInt(req.query.size || '9')));
-  const offset = (page-1)*size;
+  const offset = (page - 1) * size;
 
   const like = `%${q}%`;
   let sql = `SELECT v.*, CONCAT(u.first_name,' ',u.last_name) as owner_name 
@@ -37,14 +49,14 @@ router.post('/', isAuthenticated, async (req, res) => {
   let { owner_id, owner_ref } = req.body || {};
 
   // --- mapping από τα ονόματα που στέλνει το frontend
-  const serial_no        = req.body.serial_no ?? req.body.serial ?? req.body.vin;
-  const brand            = req.body.brand ?? req.body.make;
-  const model            = (req.body.model || '').trim();
-  const car_type         = req.body.car_type ?? req.body.type;
-  const engine_type      = req.body.engine_type ?? req.body.engine;
-  const doors            = Number(req.body.doors ?? 0);
-  const wheels           = Number(req.body.wheels ?? 0);
-  const production_date  = req.body.production_date; // "YYYY-MM-DD"
+  const serial_no = req.body.serial_no ?? req.body.serial ?? req.body.vin;
+  const brand = req.body.brand ?? req.body.make;
+  const model = (req.body.model || '').trim();
+  const car_type = req.body.car_type ?? req.body.type;
+  const engine_type = req.body.engine_type ?? req.body.engine;
+  const doors = Number(req.body.doors ?? 0);
+  const wheels = Number(req.body.wheels ?? 0);
+  const production_date = req.body.production_date; // "YYYY-MM-DD"
   const acquisition_year = Number(req.body.acquisition_year ?? req.body.year ?? 0);
 
   try {
@@ -66,7 +78,7 @@ router.post('/', isAuthenticated, async (req, res) => {
 
     // required πεδία
     if (!serial_no || !brand || !model || !car_type || !engine_type ||
-        !doors || !wheels || !production_date || !acquisition_year) {
+      !doors || !wheels || !production_date || !acquisition_year) {
       return res.status(400).json({ error: 'Λείπουν υποχρεωτικά πεδία.' });
     }
 
@@ -100,26 +112,52 @@ router.post('/', isAuthenticated, async (req, res) => {
 router.put('/:id', isAuthenticated, async (req, res) => {
   const id = Number(req.params.id);
   const [[v]] = await db.execute(`SELECT owner_id FROM vehicles WHERE id=?`, [id]);
-  if (!v) return res.status(404).json({ error:'Not found' });
-  if (!canManage(req.session.user, v.owner_id)) return res.status(403).json({ error:'Forbidden' });
+  if (!v) return res.status(404).json({ error: 'Not found' });
+  if (!canManage(req.session.user, v.owner_id)) return res.status(403).json({ error: 'Forbidden' });
 
   const { serial_no, model, brand, car_type, engine_type, doors, wheels, production_date, acquisition_year } = req.body;
   await db.execute(
     `UPDATE vehicles SET serial_no=?, model=?, brand=?, car_type=?, engine_type=?, doors=?, wheels=?, production_date=?, acquisition_year=? WHERE id=?`,
     [serial_no, model, brand, car_type, engine_type, Number(doors), Number(wheels), production_date, Number(acquisition_year), id]
   );
-  res.json({ message:'Updated' });
+  res.json({ message: 'Updated' });
 });
 
-// Delete
-router.delete('/:id', isAuthenticated, async (req, res) => {
+// DELETE /api/vehicles/:id
+router.delete('/:id', isAuthenticated, asyncH(async (req, res) => {
   const id = Number(req.params.id);
-  const [[v]] = await db.execute(`SELECT owner_id FROM vehicles WHERE id=?`, [id]);
-  if (!v) return res.status(404).json({ error:'Not found' });
-  if (!canManage(req.session.user, v.owner_id)) return res.status(403).json({ error:'Forbidden' });
+
+  // φέρε το όχημα (χωρίς να ζητάς ρητά customer_id)
+  const [rows] = await db.execute(`SELECT * FROM vehicles WHERE id=?`, [id]);
+  const v = rows[0];
+  if (!v) return res.status(404).json({ error: 'Όχημα δεν βρέθηκε' });
+
+  // ποιος είναι ο "ιδιοκτήτης" (schema-agnostic)
+  const ownerId = v.owner_id ?? v.customer_id ?? v.user_id ?? null;
+
+  // δικαιώματα: μόνο γραμματέας ή ο ιδιοκτήτης
+  const me = req.session.user;
+  if (me.role !== 'secretary' && Number(me.id) !== Number(ownerId)) {
+    return res.status(403).json({ error: 'Forbidden' });
+  }
+
+  // καθάρισε works/appointments που δείχνουν στο όχημα (αν υπάρχουν)
+  if (await tableExists('appointment_works')) {
+    await db.execute(
+      `DELETE aw FROM appointment_works aw
+         JOIN appointments a ON a.id = aw.appointment_id
+        WHERE a.vehicle_id = ?`, [id]
+    );
+  }
+  await db.execute(`DELETE FROM appointments WHERE vehicle_id=?`, [id]);
+
+  // τέλος: σβήσε το όχημα
   await db.execute(`DELETE FROM vehicles WHERE id=?`, [id]);
-  res.json({ message:'Deleted' });
-});
+
+  res.json({ message: 'Deleted' });
+}));
+
+
 
 router.get('/count', isAuthenticated, hasRole('secretary'), async (_req, res) => {
   try {
@@ -170,19 +208,19 @@ router.patch('/:id(\\d+)', isAuthenticated, async (req, res) => {
   }
 
   // --- mapping από body (δέξου και τα δύο ονόματα)
-  const serial_no        = req.body.serial_no ?? req.body.serial ?? req.body.vin;
-  const brand            = req.body.brand ?? req.body.make;
-  const model            = req.body.model;
-  const car_type         = req.body.car_type ?? req.body.type;
-  const engine_type      = req.body.engine_type ?? req.body.engine;
-  const doors            = Number(req.body.doors ?? 0);
-  const wheels           = Number(req.body.wheels ?? 0);
-  const production_date  = req.body.production_date;
+  const serial_no = req.body.serial_no ?? req.body.serial ?? req.body.vin;
+  const brand = req.body.brand ?? req.body.make;
+  const model = req.body.model;
+  const car_type = req.body.car_type ?? req.body.type;
+  const engine_type = req.body.engine_type ?? req.body.engine;
+  const doors = Number(req.body.doors ?? 0);
+  const wheels = Number(req.body.wheels ?? 0);
+  const production_date = req.body.production_date;
   const acquisition_year = Number(req.body.acquisition_year ?? req.body.year ?? 0);
 
   // --- required check (όλα υποχρεωτικά)
   if (!serial_no || !brand || !model || !car_type || !engine_type ||
-      !doors || !wheels || !production_date || !acquisition_year) {
+    !doors || !wheels || !production_date || !acquisition_year) {
     return res.status(400).json({ error: 'Λείπουν υποχρεωτικά πεδία.' });
   }
 
@@ -232,6 +270,10 @@ router.patch('/:id(\\d+)', isAuthenticated, async (req, res) => {
   res.json(v);
 });
 
+router.use((err, _req, res, _next) => {
+  console.error('vehicles.routes error:', err);
+  res.status(err.status || 500).json({ error: err.message || 'Internal error' });
+});
 
 
 module.exports = router;

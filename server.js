@@ -49,7 +49,7 @@ app.use('/api/vehicles',     require('./src/routes/vehicles.routes'));
 app.use('/api/appointments', require('./src/routes/appointments.routes'));
 app.use('/api/uploads',      require('./src/routes/uploads.routes'));
 
-// Fallback για /api/users/me (αν κάτι σπάσει, να μην γυρνάει 404)
+// Fallback για /api/users/me (να μην γυρνά 404 αν για κάποιο λόγο λείψει ο users router)
 app.get('/api/users/me', isAuthenticated, (req, res) => {
   const u = req.session.user || {};
   res.json({
@@ -59,46 +59,42 @@ app.get('/api/users/me', isAuthenticated, (req, res) => {
   });
 });
 
+// ---------- /dashboard guard ----------
 const publicDir = path.join(__dirname, 'public');
 
-/* ============================
-   🔒 GUARD για /dashboard
-   ============================ */
 function dashboardGuard(req, res, next) {
   const u = req.session?.user || null;
-  const file = (req.path || '').split('?')[0]; // π.χ. '/', '/appointments.html'
+  const file = (req.path || '').split('?')[0]; // π.χ. '/appointments.html'
 
-  // όχι logged-in -> login
   if (!u) return res.redirect('/login.html');
 
-  // /dashboard ή /dashboard/ -> redirect στο home με βάση ρόλο
+  // /dashboard ή /dashboard/ -> redirect βάση ρόλου
   if (file === '/' || file === '') {
     const home =
       u.role === 'secretary' ? '/dashboard/secretary.html' :
       u.role === 'mechanic'  ? '/dashboard/mechanic.html'  :
-      u.role === 'customer'  ? '/dashboard/customer.html'  :
-      '/';
+      u.role === 'customer'  ? '/dashboard/customer.html'  : '/';
     return res.redirect(home);
   }
 
-  // επιτρέπουμε assets (css/js/img/fonts/maps)
-  if (/\.(css|js|png|jpe?g|webp|svg|ico|gif|map|woff2?|ttf|eot)$/i.test(file)) {
-    return next();
-  }
+  // επιτρέπουμε assets
+  if (/\.(css|js|png|jpe?g|webp|svg|ico|gif|map|woff2?|ttf|eot)$/i.test(file)) return next();
 
-  // επιτρεπτές HTML σελίδες ανά ρόλο
+  // white-list html ανά ρόλο
   const allow = {
     secretary: new Set([
-      '/secretary.html',      // Πίνακας Γραμματείας (όχι index!)
+      '/secretary.html',
       '/appointments.html',
       '/vehicles.html',
       '/users.html',
       '/profile.html',
+      '/appointment.html',     // ✅ λεπτομέρειες ραντεβού
     ]),
     mechanic: new Set([
       '/mechanic.html',
       '/mechanic-profile.html',
       '/profile.html',
+      '/appointment.html',     // ✅ ο μηχανικός βλέπει τα δικά του ραντεβού
     ]),
     customer: new Set([
       '/customer.html',
@@ -111,26 +107,18 @@ function dashboardGuard(req, res, next) {
   return res.status(403).send('Forbidden');
 }
 
-// 🔒 guard ΠΡΙΝ από το static
-app.use(
-  '/dashboard',
-  dashboardGuard,
-  express.static(path.join(publicDir, 'dashboard')) // ΕΔΩ: public/dashboard
-);
+// ο guard ΠΡΙΝ το static του dashboard
+app.use('/dashboard', dashboardGuard, express.static(path.join(publicDir, 'dashboard')));
 
-// Γενικά static (landing, login, κοινά αρχεία)
+// Γενικά static (landing, login, κλπ)
 app.use(express.static(publicDir));
 
 // Health & Landing
 app.get('/healthz', (_,res)=>res.json({ok:true}));
 app.get('/',        (_,res)=>res.sendFile(path.join(publicDir,'index.html')));
 
-// ❌ ΒΓΑΛΕ αυτό που είχες πριν:
-// app.get(['/dashboard', '/dashboard/', '/dashboard/index.html'], (req, res) => {
-//   res.sendFile(path.join(publicDir, 'dashboard', 'secretary.html'));
-// });
+// (ΜΗΝ έχεις άλλο /dashboard redirect αλλού)
 
-
-
+// Start
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`🚗 AutoFix listening on http://localhost:${PORT}`));

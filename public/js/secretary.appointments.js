@@ -206,67 +206,69 @@
   }
 
   // ---------- RENDER ----------
-  function render(items) {
-    grid.innerHTML = '';
-    if (!items.length) {
-      grid.innerHTML = `<div class="card appt"><div class="appt__title">Δεν βρέθηκαν ραντεβού.</div></div>`;
-      return;
-    }
-    const frag = document.createDocumentFragment();
-    items.forEach(a => {
-      const id = Number(getId(a));
-      const code = a.appt_code || a.code || 'APT';
-      const date = normalizeStart(a);
-      const cust = a.customer_name || '—';
-      const mech = a.mechanic_name || '—';
-      const veh = vehicleText(a);
-      const probOrWork = a.reason === 'repair' ? (a.problem_desc || '—') : (a.work || '—');
-
-      const card = document.createElement('article');
-      card.className = 'card appt';
-
-      const head = document.createElement('div');
-      head.className = 'appt__row appt__row--between';
-      head.innerHTML = `
-  <div class="appt__title">${code}</div>
-  <div class="appt__actions" data-id="${id}">
-    <button class="appt__btn js-edit" title="Επεξεργασία">
-      <svg class="ico" viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M5 19h14v2H5zM19.71 7.04a1.003 1.003 0 0 0 0-1.42l-1.34-1.34a1.003 1.003 0 0 0-1.42 0L9 11.83V15h3.17l7.54-7.96z"/></svg>
-    </button>
-    <button class="appt__btn js-delete" title="Οριστική διαγραφή">
-      <svg class="ico" viewBox="0 0 24 24" width="18" height="18">
-        <path fill="currentColor" d="M6 7h12v2H6zM8 10h8l-1 10H9zM9 4h6l1 2H8z"/>
-      </svg>
-    </button>
-  </div>`;
-
-      card.appendChild(head);
-
-      const meta = document.createElement('div');
-      meta.className = 'appt__row';
-      const when = document.createElement('div');
-      when.className = 'appt__meta';
-      when.textContent = fmt(date);
-      meta.appendChild(when);
-      meta.appendChild(badgeStatus(a.status));
-      meta.appendChild(badgeReason(a.reason));
-      card.appendChild(meta);
-
-      const details = document.createElement('div');
-      details.className = 'appt__grid';
-      details.innerHTML = `
-        <div><div class="appt__label">Πελάτης</div>  <div class="appt__value">${cust}</div></div>
-        <div><div class="appt__label">Μηχανικός</div><div class="appt__value">${mech}</div></div>
-        <div><div class="appt__label">Όχημα</div>   <div class="appt__value">${veh}</div></div>
-        <div><div class="appt__label">${a.reason === 'repair' ? 'Πρόβλημα' : 'Εργασία'}</div><div class="appt__value">${probOrWork}</div></div>
-        <div><div class="appt__label">Κόστος</div>   <div class="appt__value">${a.total_cost ? `€${a.total_cost}` : '—'}</div></div>
-      `;
-      card.appendChild(details);
-
-      frag.appendChild(card);
-    });
-    grid.appendChild(frag);
+ function render(items) {
+  grid.innerHTML = '';
+  if (!items.length) {
+    grid.innerHTML = `<div class="card appt"><div class="appt__title">Δεν βρέθηκαν ραντεβού.</div></div>`;
+    return;
   }
+  const frag = document.createDocumentFragment();
+
+  items.forEach(a => {
+    const id = Number(getId(a));
+    const code = a.appt_code || a.code || 'APT';
+    const codeHtml = `<a href="/dashboard/appointment.html?id=${id}">${code}</a>`; // <-- ΠΡΟΣΘΗΚΗ
+
+    const date = normalizeStart(a);
+    const cust = a.customer_name || '—';
+    const mech = a.mechanic_name || '—';
+    const veh = vehicleText(a);
+    const probOrWork = a.reason === 'repair' ? (a.problem_desc || '—') : (a.work || '—');
+
+    const card = document.createElement('article');
+    card.className = 'card appt';
+
+    const head = document.createElement('div');
+    head.className = 'appt__row appt__row--between';
+    head.innerHTML = `
+      <div class="appt__title">${codeHtml}</div>  <!-- <-- ΧΡΗΣΙΜΟΠΟΙΩ ΤΟ codeHtml -->
+      <div class="appt__actions" data-id="${id}">
+        <button class="appt__btn js-edit" title="Επεξεργασία">
+          <svg class="ico" viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M5 19h14v2H5zM19.71 7.04a1.003 1.003 0 0 0 0-1.42l-1.34-1.34a1.003 1.003 0 0 0-1.42 0L9 11.83V15h3.17l7.54-7.96z"/></svg>
+        </button>
+        <button class="appt__btn js-delete" title="Οριστική διαγραφή">
+          <svg class="ico" viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M6 7h12v2H6zM8 10h8l-1 10H9zM9 4h6l1 2H8z"/></svg>
+        </button>
+      </div>`;
+    card.appendChild(head);
+
+    const meta = document.createElement('div');
+    meta.className = 'appt__row';
+    const when = document.createElement('div');
+    when.className = 'appt__meta';
+    when.textContent = fmt(date);
+    meta.appendChild(when);
+    meta.appendChild(badgeStatus(a.status));
+    meta.appendChild(badgeReason(a.reason));
+    card.appendChild(meta);
+
+    const details = document.createElement('div');
+    details.className = 'appt__grid';
+    details.innerHTML = `
+      <div><div class="appt__label">Πελάτης</div>  <div class="appt__value">${cust}</div></div>
+      <div><div class="appt__label">Μηχανικός</div><div class="appt__value">${mech}</div></div>
+      <div><div class="appt__label">Όχημα</div>   <div class="appt__value">${veh}</div></div>
+      <div><div class="appt__label">${a.reason === 'repair' ? 'Πρόβλημα' : 'Εργασία'}</div><div class="appt__value">${probOrWork}</div></div>
+      <div><div class="appt__label">Κόστος</div>   <div class="appt__value">${a.total_cost ? `€${a.total_cost}` : '—'}</div></div>
+    `;
+    card.appendChild(details);
+
+    frag.appendChild(card);
+  });
+
+  grid.appendChild(frag);
+}
+
 
   // ---------- events ----------
   q?.addEventListener('input', debounce(() => { state.query = q.value.trim(); page = 1; load(); }, 250));
