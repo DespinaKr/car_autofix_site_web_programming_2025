@@ -96,3 +96,24 @@
 
 /* προαιρετικά: όταν ανοίγει modal, κλείδωσε το scroll της σελίδας */
 body.modal-open{ overflow: hidden; }
+
+/* overlay – χωρίς διάφανο εφέ */
+.modal {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: #0a0f1d;        /* συμπαγές, όχι rgba(0,0,0,.4) */
+  backdrop-filter: none;      /* καθόλου blur */
+  z-index: 1000;
+}
+
+/* κάρτα modal */
+.modal .card,
+.modal .dialog,
+#workModal .card {
+  background: var(--panel);   /* η δική σου σκούρα κάρτα */
+  border: 1px solid #1b2947;
+  border-radius: 14px;
+  backdrop-filter: none;      /* σβήσε οποιοδήποτε blur */
+}

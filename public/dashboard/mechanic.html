@@ -1,23 +1,111 @@
-<!doctype html><html lang="el"><head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Πίνακας Ελέγχου · Μηχανικός</title>
-<link rel="stylesheet" href="/css/style.css">
-<script defer src="/js/auth-guard.js"></script>
-<script defer src="/js/api.js"></script>
-<script defer src="/js/mechanic.js"></script>
-</head><body>
-<div class="navbar">
-  <button class="btn ghost" onclick="document.body.classList.toggle('nav-open')">☰ Μενού</button>
-  <div class="brand"><span class="badge">AF</span> Μηχανοουργείο AutoFix</div>
+<!doctype html>
+<html lang="el">
 
-<button class="btn ghost" data-action="logout">Αποσύνδεση</button>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Πίνακας Ελέγχου · Μηχανικός · AutoFix</title>
 
-</div>
-<div class="container">
-  <h2>Τα ραντεβού μου</h2>
-  <div id="list"></div>
-</div>
-<script>
-async function logout(){ await api('/api/auth/logout',{method:'POST'}); location.href='/login.html'; }
-</script>
-</body></html>
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="stylesheet" href="/css/dash.css" />
+
+  <script defer src="/js/api.js"></script>
+  <script defer src="/js/auth-guard.js"></script>
+  <script defer src="/js/mechanic.js"></script>
+</head>
+
+<body>
+  <!-- NAVBAR -->
+  <div class="navbar">
+    <a class="brand" href="/dashboard/mechanic.html">
+      <img class="brand-logo" src="/img/logo.png" alt="AutoFix logo">
+      <span>Μηχανουργείο AutoFix</span>
+    </a>
+    <div style="display:flex;gap:8px;align-items:center">
+      <a class="btn ghost" href="/dashboard/mechanic-profile.html">Προφίλ</a>
+      <span class="badge" id="navUser">—</span>
+      <button class="btn ghost" data-action="logout">Αποσύνδεση</button>
+    </div>
+  </div>
+
+  <main class="main">
+    <h1 class="page-title">Πίνακας Ελέγχου (Μηχανικός)</h1>
+
+    <!-- φίλτρα -->
+    <section class="card" style="margin-bottom:12px;">
+      <div class="card-head">
+        <h3>Φίλτρα</h3>
+      </div>
+      <div class="grid cols-3" style="gap:8px">
+        <div>
+          <label class="small">Ημερομηνία</label>
+          <input id="dateFilter" class="input" type="date" />
+        </div>
+        <div>
+          <label class="small">Κατάσταση</label>
+          <select id="statusFilter" class="input">
+            <option value="">Όλες</option>
+            <option value="CREATED">Δημιουργημένο</option>
+            <option value="IN_PROGRESS">Σε εξέλιξη</option>
+            <option value="COMPLETED">Περατωμένο</option>
+            <option value="CANCELED">Ακυρωμένο</option>
+          </select>
+        </div>
+        <div style="align-self:end">
+          <button id="btnClear" class="btn ghost">Καθαρισμός</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- λίστα ραντεβού -->
+    <section class="card">
+      <div class="card-head">
+        <h3>Τα ραντεβού μου</h3>
+      </div>
+      <div id="apptGrid"></div>
+    </section>
+
+    <!-- λίστα οχημάτων (περιορισμένη προβολή) -->
+    <section class="card" style="margin-top:12px">
+      <div class="card-head">
+        <h3>Τα οχήματά μου (μόνο προβολή)</h3>
+      </div>
+      <div id="vehList"></div>
+    </section>
+
+
+    <div class="toast hidden"></div>
+  </main>
+
+  <!-- Modal Προσθήκης Εργασίας -->
+  <div id="workModal" class="modal" aria-hidden="true">
+    <div class="modal__dialog">
+      <div class="modal__head">
+        <h3 id="workTitle">Νέα εργασία</h3>
+        <button id="workClose" class="modal__close" aria-label="Κλείσιμο">×</button>
+      </div>
+      <form id="workForm" class="modal__body" data-id="">
+        <div class="grid cols-2" style="gap:10px">
+          <div class="field" style="grid-column:1/-1">
+            <label class="small">Περιγραφή</label>
+            <input class="input" name="description" required placeholder="π.χ. Αλλαγή λαδιών">
+          </div>
+          <div class="field">
+            <label class="small">Υλικά (προαιρετικό)</label>
+            <input class="input" name="materials" placeholder="π.χ. Φίλτρο λαδιού">
+          </div>
+          <div class="field">
+            <label class="small">Κόστος (€)</label>
+            <input class="input" name="cost" type="number" step="0.01" min="0" required>
+          </div>
+        </div>
+        <div style="text-align:right;margin-top:10px">
+          <button type="button" class="btn ghost" id="btnWorkCancel">Άκυρο</button>
+          <button class="btn" id="btnWorkSave">Αποθήκευση</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</body>
+
+</html>
