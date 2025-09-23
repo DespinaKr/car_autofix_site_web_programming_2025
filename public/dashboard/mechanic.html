@@ -1,23 +1,21 @@
 <!doctype html>
 <html lang="el">
-
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Πίνακας Ελέγχου · Μηχανικός · AutoFix</title>
 
-  <link rel="stylesheet" href="/css/style.css" />
-  <link rel="stylesheet" href="/css/dash.css" />
+  <link rel="stylesheet" href="/css/style.css"/>
+  <link rel="stylesheet" href="/css/dash.css"/>
 
   <script defer src="/js/api.js"></script>
   <script defer src="/js/auth-guard.js"></script>
   <script defer src="/js/mechanic.js"></script>
 </head>
-
 <body>
   <!-- NAVBAR -->
   <div class="navbar">
-    <a class="brand" href="/dashboard/mechanic.html">
+    <a class="brand" href="/" aria-label="Αρχική σελίδα">
       <img class="brand-logo" src="/img/logo.png" alt="AutoFix logo">
       <span>Μηχανουργείο AutoFix</span>
     </a>
@@ -33,13 +31,11 @@
 
     <!-- φίλτρα -->
     <section class="card" style="margin-bottom:12px;">
-      <div class="card-head">
-        <h3>Φίλτρα</h3>
-      </div>
+      <div class="card-head"><h3>Φίλτρα</h3></div>
       <div class="grid cols-3" style="gap:8px">
         <div>
           <label class="small">Ημερομηνία</label>
-          <input id="dateFilter" class="input" type="date" />
+          <input id="dateFilter" class="input" type="date"/>
         </div>
         <div>
           <label class="small">Κατάσταση</label>
@@ -59,19 +55,15 @@
 
     <!-- λίστα ραντεβού -->
     <section class="card">
-      <div class="card-head">
-        <h3>Τα ραντεβού μου</h3>
-      </div>
+      <div class="card-head"><h3>Τα ραντεβού μου</h3></div>
       <div id="apptGrid"></div>
     </section>
 
     <!-- λίστα οχημάτων (περιορισμένη προβολή) -->
-    <section class="card" style="margin-top:12px">
-      <div class="card-head">
-        <h3>Τα οχήματά μου (μόνο προβολή)</h3>
-      </div>
-      <div id="vehList"></div>
-    </section>
+<section class="card" style="margin-top:12px">
+  <div class="card-head"><h3>Τα οχήματά μου (μόνο προβολή)</h3></div>
+  <div id="vehList"></div>
+</section>
 
 
     <div class="toast hidden"></div>
@@ -107,5 +99,5 @@
     </div>
   </div>
 </body>
-
 </html>
+

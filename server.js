@@ -19,7 +19,7 @@ app.use(helmet());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Session (ΜΙΑ φορά, εδώ)
+// Session
 const sessionStore = new MySQLStore({
   host: process.env.DB_HOST,
   port: Number(process.env.DB_PORT || 3306),
@@ -43,16 +43,14 @@ app.use(session({
 }));
 
 // API routes (πριν τα static)
-app.use('/api/auth',        require('./src/routes/auth.routes'));
-app.use('/api/users',       require('./src/routes/users.routes'));   // <-- Ο σωστός router
-app.use('/api/vehicles',    require('./src/routes/vehicles.routes'));
-app.use('/api/appointments',require('./src/routes/appointments.routes'));
-app.use('/api/uploads',     require('./src/routes/uploads.routes'));
+app.use('/api/auth',         require('./src/routes/auth.routes'));
+app.use('/api/users',        require('./src/routes/users.routes'));
+app.use('/api/vehicles',     require('./src/routes/vehicles.routes'));
+app.use('/api/appointments', require('./src/routes/appointments.routes'));
+app.use('/api/uploads',      require('./src/routes/uploads.routes'));
 
-// 🔒 Fallback για /api/users/me ώστε να ΜΗΝ ξαναβλέπεις 404
-// (αν ο users router δεν φορτώσει για οποιονδήποτε λόγο)
+// Fallback για /api/users/me (αν κάτι σπάσει, να μην γυρνάει 404)
 app.get('/api/users/me', isAuthenticated, (req, res) => {
-  // ελάχιστο προφίλ από τη συνεδρία (αρκετό για το UI)
   const u = req.session.user || {};
   res.json({
     id: u.id, username: u.username, email: u.email,
@@ -61,19 +59,78 @@ app.get('/api/users/me', isAuthenticated, (req, res) => {
   });
 });
 
-// Static
 const publicDir = path.join(__dirname, 'public');
-app.use(express.static(publicDir));
 
-// Redirect παλιού link
-app.get(['/dashboard', '/dashboard/', '/dashboard/index.html'], (req, res) => {
-  res.sendFile(path.join(publicDir, 'dashboard', 'secretary.html'));
-});
+/* ============================
+   🔒 GUARD για /dashboard
+   ============================ */
+function dashboardGuard(req, res, next) {
+  const u = req.session?.user || null;
+  const file = (req.path || '').split('?')[0]; // π.χ. '/', '/appointments.html'
+
+  // όχι logged-in -> login
+  if (!u) return res.redirect('/login.html');
+
+  // /dashboard ή /dashboard/ -> redirect στο home με βάση ρόλο
+  if (file === '/' || file === '') {
+    const home =
+      u.role === 'secretary' ? '/dashboard/secretary.html' :
+      u.role === 'mechanic'  ? '/dashboard/mechanic.html'  :
+      u.role === 'customer'  ? '/dashboard/customer.html'  :
+      '/';
+    return res.redirect(home);
+  }
+
+  // επιτρέπουμε assets (css/js/img/fonts/maps)
+  if (/\.(css|js|png|jpe?g|webp|svg|ico|gif|map|woff2?|ttf|eot)$/i.test(file)) {
+    return next();
+  }
+
+  // επιτρεπτές HTML σελίδες ανά ρόλο
+  const allow = {
+    secretary: new Set([
+      '/secretary.html',      // Πίνακας Γραμματείας (όχι index!)
+      '/appointments.html',
+      '/vehicles.html',
+      '/users.html',
+      '/profile.html',
+    ]),
+    mechanic: new Set([
+      '/mechanic.html',
+      '/mechanic-profile.html',
+      '/profile.html',
+    ]),
+    customer: new Set([
+      '/customer.html',
+      '/customer-profile.html',
+      '/profile.html',
+    ]),
+  };
+
+  if (allow[u.role]?.has(file)) return next();
+  return res.status(403).send('Forbidden');
+}
+
+// 🔒 guard ΠΡΙΝ από το static
+app.use(
+  '/dashboard',
+  dashboardGuard,
+  express.static(path.join(publicDir, 'dashboard')) // ΕΔΩ: public/dashboard
+);
+
+// Γενικά static (landing, login, κοινά αρχεία)
+app.use(express.static(publicDir));
 
 // Health & Landing
 app.get('/healthz', (_,res)=>res.json({ok:true}));
-app.get('/', (_,res)=>res.sendFile(path.join(publicDir,'index.html')));
+app.get('/',        (_,res)=>res.sendFile(path.join(publicDir,'index.html')));
 
-// Start
+// ❌ ΒΓΑΛΕ αυτό που είχες πριν:
+// app.get(['/dashboard', '/dashboard/', '/dashboard/index.html'], (req, res) => {
+//   res.sendFile(path.join(publicDir, 'dashboard', 'secretary.html'));
+// });
+
+
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`🚗 AutoFix listening on http://localhost:${PORT}`));
