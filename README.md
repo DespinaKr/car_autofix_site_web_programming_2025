@@ -117,7 +117,7 @@ sql/
 <ol>
   <li><strong>Prerequisites</strong>: Node.js 18+, MySQL 8+</li>
   <li><strong>Install dependencies</strong>:
-    <pre><code>npm install</code></pre>
+    <pre><code>npm.cmd install</code></pre>
   </li>
   <li><strong>Database</strong>:
     <pre><code>mysql -u root -p &lt; sql/schema.sql</code></pre>
@@ -125,12 +125,45 @@ sql/
   <li><strong>Create <code>.env</code></strong> (see below)</li>
   <li><strong>Start</strong>:
     <ul>
-      <li>Development: <code>npm run dev</code> (nodemon)</li>
-      <li>Production: <code>npm start</code></li>
+      <li>Production: <code>npm.cmd start</code></li>
     </ul>
   </li>
 </ol>
 
+<h2 id="db-phpmyadmin-en">🗄️ Database Setup via phpMyAdmin</h2>
+
+<h3>Prerequisites</h3>
+<ul>
+  <li>Access to <strong>phpMyAdmin</strong> (XAMPP/WAMP/MAMP or cPanel/hosting).</li>
+  <li>MySQL 8.x with <strong>InnoDB</strong> engine enabled.</li>
+  <li>Schema file: <code>sql/schema.sql</code>.</li>
+</ul>
+
+<h3>Step 1: Create the database</h3>
+<ol>
+  <li>Log in to <strong>phpMyAdmin</strong>.</li>
+  <li>Click <em>Databases</em> → <em>Create database</em>.</li>
+  <li>Name: <code>autofix</code> (or your preferred name).</li>
+  <li>Character set: <code>utf8mb4</code>, Collation: <code>utf8mb4_unicode_ci</code>.</li>
+  <li>Click <em>Create</em>.</li>
+</ol>
+
+<h3>Step 2: Import the schema</h3>
+<ol>
+  <li>Select the <code>autofix</code> database from the left sidebar.</li>
+  <li>Open the <em>Import</em> tab.</li>
+  <li>Click <em>Choose file</em> and select <code>sql/schema.sql</code> from the project.</li>
+  <li>Format: <strong>SQL</strong> (default). Leave other options to defaults.</li>
+  <li>Click <em>Go</em>. Tables will be created: <code>users</code>, <code>customers</code>, <code>mechanics</code>, <code>vehicles</code>, <code>appointments</code>, <code>works</code>.</li>
+</ol>
+
+<h3>Step 3: Create a dedicated MySQL user</h3>
+<ol>
+  <li>Go to <em>User accounts</em> → <em>Add user account</em>.</li>
+  <li><strong>Username</strong>: <code>autofix</code> • <strong>Host</strong>: <code>localhost</code> • <strong>Password</strong>: generate a strong one.</li>
+  <li>Privileges: choose <em>Grant all privileges on database</em> → select <code>autofix</code>.</li>
+  <li>Click <em>Go</em>.</li>
+</ol>
 <!-- ENV -->
 <h2 id="env">🔧 Environment Variables</h2>
 
