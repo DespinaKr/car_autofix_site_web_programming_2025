@@ -1,30 +1,37 @@
 <!doctype html>
+<!-- HTML5 έγγραφο -->
 <html lang="el">
 
 <head>
   <meta charset="utf-8" />
+  <!-- Ρύθμιση responsive προβολής -->
   <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <!-- Τίτλος σελίδας -->
   <title>Οχήματα · Γραμματέας · AutoFix</title>
 
+  <!-- Βασικά styles εφαρμογής -->
   <link rel="stylesheet" href="/css/style.css" />
   <link rel="stylesheet" href="/css/dash.css" />
+  <!-- Styles για κάρτες οχημάτων -->
   <link rel="stylesheet" href="/css/vehicles-cards.css" />
 </head>
 
 <body>
-  <!-- NAVBAR -->
+  <!-- NAVBAR: επάνω μπάρα πλοήγησης -->
   <div class="navbar">
+    <!-- Λογότυπο & σύνδεσμος αρχικής -->
     <a class="brand" href="/">
       <img class="brand-logo" src="/img/logo.png" alt="AutoFix">
       <span>Μηχανουργείο AutoFix</span>
     </a>
+    <!-- Δεξί τμήμα navbar: χρήστης & αποσύνδεση -->
     <div class="nav-right">
       <span class="badge" id="navUser">—</span>
       <button class="btn ghost" data-action="logout">Αποσύνδεση</button>
     </div>
   </div>
 
-  <!-- SIDEBAR -->
+  <!-- SIDEBAR: κάθετη πλοήγηση dashboard -->
   <aside class="sidebar">
     <a href="/dashboard/secretary.html">
       <span class="ico"><svg viewBox="0 0 24 24">
@@ -46,6 +53,7 @@
         </svg></span>
       Χρήστες
     </a>
+    <!-- Τρέχουσα ενότητα: Οχήματα -->
     <a class="active" href="/dashboard/vehicles.html">
       <span class="ico"><svg viewBox="0 0 24 24">
           <path fill="currentColor"
@@ -56,21 +64,22 @@
     <a href="/dashboard/appointments.html">
       <span class="ico"><svg viewBox="0 0 24 24">
           <path fill="currentColor"
-            d="M19 4h-1V2h-2v2H8V2H6v2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2Zm0 16H5V9h14v11Z" />
+            d="M19 4h-1V2h-2v2H8V2H6v2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2Zm0 16H5V9h14v11Ζ" />
         </svg></span>
       Ραντεβού
     </a>
   </aside>
 
-  <!-- MAIN -->
+  <!-- MAIN: κύριο περιεχόμενο -->
   <main class="main">
+    <!-- Κεφαλίδα σελίδας: τίτλος, υπότιτλος, actions -->
     <div class="page-header">
       <div>
         <h1 class="page-title">Διαχείριση Οχημάτων</h1>
         <div class="subtitle">Διαχείριση όλων των οχημάτων πελατών</div>
       </div>
 
-      <!-- ΝΕΟ: actions δεξιά -->
+      <!-- Ενέργειες δεξιά: εισαγωγή/νέο όχημα (κρυφά αρχικά) -->
       <div class="page-actions">
         <input id="importFile" type="file" accept=".csv" style="display:none" />
         <button id="btnImport" class="btn ghost" style="display:none">Εισαγωγή από αρχείο</button>
@@ -78,7 +87,7 @@
       </div>
     </div>
 
-    <!-- Toolbar -->
+    <!-- Εργαλειοθήκη φίλτρων/αναζήτησης -->
     <div class="veh-toolbar">
       <input id="searchInput" class="input" placeholder="Αναζήτηση..." />
       <select id="typeSelect" class="select">
@@ -90,12 +99,12 @@
       <span id="totalInfo" class="muted"></span>
     </div>
 
-    <!-- Grid -->
+    <!-- Πλέγμα καρτών οχημάτων (γεμίζει δυναμικά) -->
     <section class="veh-grid" id="vehGrid">
       <!-- cards via JS -->
     </section>
 
-    <!-- Pager -->
+    <!-- Σελιδοποίηση -->
     <div class="veh-pager">
       <button id="btnPrev" class="btn small ghost">Προηγούμενα</button>
       <div class="muted" id="pageInfo">Σελίδα 1 / 1</div>
@@ -103,13 +112,15 @@
     </div>
   </main>
 
-  <!-- Modal: Add/Edit Vehicle -->
+  <!-- Modal: Προσθήκη/Επεξεργασία Οχήματος -->
   <div id="vehModal" class="modal hidden" aria-hidden="true">
     <div class="modal-card">
+      <!-- Κεφαλίδα modal -->
       <div class="modal-head">
         <h3 id="vehModalTitle">Όχημα</h3>
         <button class="btn ghost" id="vehClose">✕</button>
       </div>
+      <!-- Φόρμα οχήματος -->
       <form id="vehForm" class="form-grid">
         <label>Σειριακός Αριθμός (VIN)
           <input name="serial" class="input" required />
@@ -149,15 +160,14 @@
           <input name="year" type="number" min="1900" max="2100" class="input" required />
         </label>
 
-        <!-- Μόνο για γραμματέα: Δήλωση ιδιοκτήτη -->
-        <!-- Υπάρχον (για CREATE): -->
+        <!-- Δήλωση ιδιοκτήτη (δημιουργία) -->
         <div id="ownerRow">
           <label>Owner User ID / Username
             <input id="owner_ref" name="owner_ref" class="input" placeholder="π.χ. 7 ή john">
           </label>
         </div>
 
-        <!-- ΝΕΟ (για EDIT): -->
+        <!-- Ανάγνωση ιδιοκτήτη (επεξεργασία) -->
         <div id="ownerReadonlyRow" style="display:none">
           <label>Ιδιοκτήτης (δεν αλλάζει)
             <div id="ownerReadonly" class="input"
@@ -165,7 +175,7 @@
           </label>
         </div>
 
-
+        <!-- Ενέργειες modal -->
         <div class="modal-actions">
           <button type="button" class="btn ghost" id="vehCancel">Άκυρο</button>
           <button type="submit" class="btn">Αποθήκευση</button>
@@ -174,7 +184,7 @@
     </div>
   </div>
 
-  <!-- scripts -->
+  <!-- Scripts σελίδας -->
   <script defer src="/js/api.js"></script>
   <script defer src="/js/auth-guard.js"></script>
   <script defer src="/js/nav-user.js"></script>

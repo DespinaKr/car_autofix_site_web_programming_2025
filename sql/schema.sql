@@ -77,7 +77,7 @@ CREATE TABLE works (
   FOREIGN KEY (appointment_id) REFERENCES appointments(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
--- Demo data similar to screenshots
+-- Demo data 
 INSERT INTO users (role, username, email, password_hash, first_name, last_name, id_card, is_active)
 VALUES
 ('secretary','admin','admin@garage.com','$2a$10$2ZsXk8m87wD7O6z7s2g8le8Cqx6Kz9xJ6x8RAV5oU12QY8oY2gThS','Admin','Secretary','ID0001',1),

@@ -4,21 +4,23 @@
 (function () {
   'use strict';
 
+  // --------- Συντομεύσεις DOM / αναφορές στοιχείων KPI & λίστας πρόσφατων ----------
   const $ = (sel, root = document) => root.querySelector(sel);
 
-  const elUsers    = $('#statUsers');
-  const elVehicles = $('#statVehicles');
-  const elAppts    = $('#statAppointments');
-  const elToday    = $('#statToday');
-  const list       = $('#recentList');
+  const elUsers    = $('#statUsers');        // KPI: σύνολο χρηστών
+  const elVehicles = $('#statVehicles');     // KPI: σύνολο οχημάτων
+  const elAppts    = $('#statAppointments'); // KPI: σύνολο ραντεβού
+  const elToday    = $('#statToday');        // KPI: σημερινά ραντεβού
+  const list       = $('#recentList');       // UL για πρόσφατα ραντεβού
 
   // -------- Helpers --------
+  // putCount: κάνει ένα μικρό "μετρητή" animation μέχρι να φτάσει στον τελικό αριθμό
   function putCount(node, to = 0) {
     if (!node) return;
     const end = Number(to) || 0;
     if (end <= 0) { node.textContent = '0'; return; }
     let cur = 0;
-    const step = Math.max(1, Math.floor(end / 50));
+    const step = Math.max(1, Math.floor(end / 50)); // ~50 βήματα μέχρι να φτάσει
     const tick = () => {
       cur += step; if (cur >= end) cur = end;
       node.textContent = cur.toLocaleString('el-GR');
@@ -27,7 +29,8 @@
     tick();
   }
 
-  // HH:MM extractor
+  // pick: επιστρέφει την πρώτη διαθέσιμη τιμή από μια λίστα keys
+  // extractHHMM: απομονώνει ώρα "HH:MM" από διαφορετικές πιθανές δομές πεδίων
   const pick = (o, keys) => keys.reduce((v, k) => (v ?? o?.[k]), null);
   function extractHHMM(a = {}) {
     const timeField = pick(a, ['start_time','appt_time','time','appointment_time']);
@@ -45,7 +48,7 @@
     return '';
   }
 
-  // Recent renderer
+  // renderRecent: γεμίζει τη λίστα των 3 πρόσφατων ραντεβού
   function renderRecent(items = []) {
     if (!list) return;
     list.innerHTML = '';
@@ -59,8 +62,9 @@
     items.slice(0, 3).forEach(a => {
       const li = document.createElement('li');
       li.className = 'appt appt--ref';
-      const hhmm = extractHHMM(a);
-      const who  = a.customer_name || a.customer || a.client || '—';
+      const hhmm = extractHHMM(a); // ώρα "HH:MM" αν υπάρχει
+      const who  = a.customer_name || a.customer || a.client || '—'; // όνομα πελάτη
+      // car: προσπάθεια εξαγωγής ονόματος μοντέλου/οχήματος από διάφορα πιθανά πεδία
       const car  = a.vehicle_model || (a.make && a.model ? `${a.make} ${a.model}` : (a.vehicle || a.car || ''));
       li.innerHTML = `
         <div class="av av--cal">
@@ -78,22 +82,24 @@
     list.appendChild(frag);
   }
 
-  // Σωστό εικονίδιο για "Σημερινά Ραντεβού" (αν υπάρχει host)
+  // decorateTodayIcon: τοποθετεί SVG εικονίδιο ρολογιού για το KPI "Σημερινά Ραντεβού" (αν υπάρχει anchor)
   function decorateTodayIcon() {
     const host = document.getElementById('statTodayIcon');
     if (!host) return;
     host.innerHTML = `
       <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
         <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/>
-        <path d="M12 7v5l3 1.5" fill="none" stroke="currentColor" stroke-width="2"
+        <path d="M12 7v5λ3 1.5" fill="none" stroke="currentColor" stroke-width="2"
               stroke-linecap="round" stroke-linejoin="round"/>
       </svg>`;
     host.classList.add('is-svg-today');
   }
 
+  // loadData: φέρνει KPIs & πρόσφατα ραντεβού και τα αποδίδει στο UI
   async function loadData() {
     try {
-      // Χρησιμοποιούμε το GLOBAL api() από /js/api.js (ΜΗΝ το ξαναορίσεις εδώ)
+      // Κλήσεις KPIs παράλληλα με Promise.all
+      // (χρησιμοποιείται η global api() από /js/api.js)
       const [u, v, a, t] = await Promise.all([
         api('/api/users/count'),
         api('/api/vehicles/count'),
@@ -101,7 +107,7 @@
         api('/api/appointments/today/count'),
       ]);
 
-      // Recent: προσπάθησε με ?recent=3 → fallback σε limit=3
+      // Πρόσφατα: προτίμηση ?recent=3, αλλιώς fallback ?limit=3&sort=desc
       let recent = [];
       try {
         const r = await api('/api/appointments?recent=3');
@@ -113,13 +119,15 @@
         } catch { recent = []; }
       }
 
-      putCount(elUsers, u?.count ?? 0);
+      // Απόδοση KPI counters (με animation) & λίστας πρόσφατων
+      putCount(elUsers,    u?.count ?? 0);
       putCount(elVehicles, v?.count ?? 0);
-      putCount(elAppts, a?.count ?? 0);
-      putCount(elToday, t?.count ?? 0);
+      putCount(elAppts,    a?.count ?? 0);
+      putCount(elToday,    t?.count ?? 0);
       renderRecent(recent);
       decorateTodayIcon();
     } catch (err) {
+      // Σε σφάλμα: γράψε μηδενικά και απόδωσε empty state
       console.error('Secretary dashboard load error:', err);
       putCount(elUsers, 0);
       putCount(elVehicles, 0);
@@ -130,5 +138,6 @@
     }
   }
 
+  // Εκκίνηση όταν το DOM είναι έτοιμο
   document.addEventListener('DOMContentLoaded', loadData);
 })();

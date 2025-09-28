@@ -1,32 +1,39 @@
 <!doctype html>
+<!-- HTML5 έγγραφο -->
 <html lang="el">
 
 <head>
     <meta charset="utf-8" />
+    <!-- Responsive ρυθμίσεις viewport -->
     <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <!-- Τίτλος σελίδας -->
     <title>Χρήστες · Γραμματέας · AutoFix</title>
 
+    <!-- Γενικά styles εφαρμογής -->
     <link rel="stylesheet" href="/css/style.css" />
+    <!-- Styles για dashboard -->
     <link rel="stylesheet" href="/css/dash.css" />
+    <!-- Styles για πίνακα χρηστών -->
     <link rel="stylesheet" href="/css/users-table.css">
-
 
 </head>
 
 <body>
-    <!-- NAVBAR -->
+    <!-- NAVBAR: επάνω μπάρα πλοήγησης -->
     <div class="navbar">
+        <!-- Λογότυπο/σύνδεσμος αρχικής -->
         <a class="brand" href="/">
             <img class="brand-logo" src="/img/logo.png" alt="AutoFix">
             <span>Μηχανουργείο AutoFix</span>
         </a>
+        <!-- Δεξιά πλευρά navbar: εμφάνιση χρήστη & αποσύνδεση -->
         <div style="display:flex;gap:8px;align-items:center">
             <span class="badge" id="navUser">—</span>
             <button class="btn ghost" data-action="logout">Αποσύνδεση</button>
         </div>
     </div>
 
-    <!-- SIDEBAR -->
+    <!-- SIDEBAR: κάθετη πλοήγηση εντός dashboard -->
     <aside class="sidebar">
         <a href="/dashboard/secretary.html">
             <span class="ico"><svg viewBox="0 0 24 24">
@@ -41,6 +48,7 @@
                 </svg></span>
             Προφίλ
         </a>
+        <!-- Τρέχουσα επιλογή: Χρήστες -->
         <a class="active" href="/dashboard/users.html">
             <span class="ico"><svg viewBox="0 0 24 24">
                     <path fill="currentColor"
@@ -64,11 +72,13 @@
         </a>
     </aside>
 
-    <!-- MAIN -->
+    <!-- MAIN: κύριο περιεχόμενο σελίδας -->
     <main class="main">
+        <!-- Τίτλος & υπότιτλος -->
         <h1 class="page-title">Διαχείριση Χρηστών</h1>
         <div class="subtitle">Manage system users and their permissions</div>
 
+        <!-- Εργαλειοθήκη: αναζήτηση, φίλτρο ρόλου, σύνολο -->
         <div class="toolbar">
             <input id="searchInput" class="input" type="search" placeholder="Αναζήτηση χρηστών..." />
             <select id="roleSelect" class="select">
@@ -80,36 +90,43 @@
             <span class="muted" id="totalInfo"></span>
         </div>
 
+        <!-- Κάρτα με περιτύλιγμα του πίνακα χρηστών -->
         <section class="card">
+            <!-- Εσωτερική κάρτα που περιέχει τον πίνακα & την σελιδοποίηση -->
             <section class="card users-wrap">
-  <div class="users-table" id="usersTable">
-    <!-- header -->
-    <div class="users-row users-head">
-      <div class="users-cell">USER</div>
-      <div class="users-cell">ΡΟΛΟΣ</div>
-      <div class="users-cell">ΚΑΤΑΣΤΑΣΗ</div>
-      <div class="users-cell">DETAILS</div>
-      <div class="users-cell" style="text-align:right">ΕΝΕΡΓΕΙΕΣ</div>
-    </div>
-    <!-- rows μπαίνουν δυναμικά -->
-  </div>
+              <!-- Περιοχή πίνακα χρηστών -->
+              <div class="users-table" id="usersTable">
+                <!-- Κεφαλίδα πίνακα -->
+                <div class="users-row users-head">
+                  <div class="users-cell">USER</div>
+                  <div class="users-cell">ΡΟΛΟΣ</div>
+                  <div class="users-cell">ΚΑΤΑΣΤΑΣΗ</div>
+                  <div class="users-cell">DETAILS</div>
+                  <div class="users-cell" style="text-align:right">ΕΝΕΡΓΕΙΕΣ</div>
+                </div>
+                <!-- Δυναμικές γραμμές τοποθετούνται από JS -->
+              </div>
 
-  <div class="footer-pager">
-    <button id="btnPrev" class="btn small ghost">Προηγούμενα</button>
-    <div class="muted" id="pageInfo">Σελίδα 1</div>
-    <button id="btnNext" class="btn small">Επόμενα</button>
-  </div>
-</section>
+              <!-- Σελιδοποίηση: προηγούμενα/επόμενα & τρέχουσα σελίδα -->
+              <div class="footer-pager">
+                <button id="btnPrev" class="btn small ghost">Προηγούμενα</button>
+                <div class="muted" id="pageInfo">Σελίδα 1</div>
+                <button id="btnNext" class="btn small">Επόμενα</button>
+              </div>
+            </section>
 
         </section>
     </main>
-    <!-- Edit User Modal -->
+
+    <!-- Edit User Modal: φόρμα επεξεργασίας χρήστη -->
     <div id="editModal" class="modal hidden" aria-hidden="true">
         <div class="modal-card">
+            <!-- Κεφαλίδα modal με τίτλο & κλείσιμο -->
             <div class="modal-head">
                 <h3 id="editTitle">Επεξεργασία χρήστη</h3>
                 <button class="btn ghost" id="editClose">✕</button>
             </div>
+            <!-- Φόρμα επεξεργασίας: βασικά πεδία + επιπλέον ανά ρόλο -->
             <form id="editForm" class="form-grid">
                 <label>Όνομα
                     <input name="first_name" class="input" />
@@ -127,6 +144,7 @@
                     <input name="id_card" class="input" />
                 </label>
 
+                <!-- Επιπλέον πεδία για ρόλο πελάτη -->
                 <div id="editCustomer" class="role-extra hidden">
                     <label>ΑΦΜ
                         <input name="afm" class="input" />
@@ -136,12 +154,14 @@
                     </label>
                 </div>
 
+                <!-- Επιπλέον πεδίο για ρόλο μηχανικού -->
                 <div id="editMechanic" class="role-extra hidden">
                     <label>Ειδικότητα
                         <input name="specialty" class="input" />
                     </label>
                 </div>
 
+                <!-- Κουμπιά ενεργειών modal -->
                 <div class="modal-actions">
                     <button type="button" class="btn ghost" id="editCancel">Άκυρο</button>
                     <button type="submit" class="btn">Αποθήκευση</button>
@@ -150,6 +170,7 @@
         </div>
     </div>
 
+    <!-- Scripts: βιβλιοθήκες/guard/λογική σελίδας (διπλές αναφορές παραμένουν όπως δόθηκαν) -->
     <script defer src="/js/api.js"></script>
     <script defer src="/js/auth-guard.js"></script>
     <script defer src="/js/secretary.users.js"></script>

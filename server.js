@@ -49,7 +49,7 @@ app.use('/api/vehicles',     require('./src/routes/vehicles.routes'));
 app.use('/api/appointments', require('./src/routes/appointments.routes'));
 app.use('/api/uploads',      require('./src/routes/uploads.routes'));
 
-// Fallback για /api/users/me (να μην γυρνά 404 αν για κάποιο λόγο λείψει ο users router)
+// Fallback για /api/users/me 
 app.get('/api/users/me', isAuthenticated, (req, res) => {
   const u = req.session.user || {};
   res.json({
@@ -88,13 +88,13 @@ function dashboardGuard(req, res, next) {
       '/vehicles.html',
       '/users.html',
       '/profile.html',
-      '/appointment.html',     // ✅ λεπτομέρειες ραντεβού
+      '/appointment.html',     
     ]),
     mechanic: new Set([
       '/mechanic.html',
       '/mechanic-profile.html',
       '/profile.html',
-      '/appointment.html',     // ✅ ο μηχανικός βλέπει τα δικά του ραντεβού
+      '/appointment.html',    
     ]),
     customer: new Set([
       '/customer.html',
@@ -117,7 +117,6 @@ app.use(express.static(publicDir));
 app.get('/healthz', (_,res)=>res.json({ok:true}));
 app.get('/',        (_,res)=>res.sendFile(path.join(publicDir,'index.html')));
 
-// (ΜΗΝ έχεις άλλο /dashboard redirect αλλού)
 
 // Start
 const PORT = process.env.PORT || 3000;

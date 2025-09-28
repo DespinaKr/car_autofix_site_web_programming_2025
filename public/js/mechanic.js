@@ -3,27 +3,32 @@
   'use strict';
 
   // ---------- shorthands ----------
+  // Συντομεύσεις για DOM επιλογές
   const $ = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 
+  // Αναφορές στοιχείων UI
   const grid = $('#apptGrid');
   const dateFilter = $('#dateFilter');
   const statusFilter = $('#statusFilter');
   const btnClear = $('#btnClear');
 
-  // modal refs
+  // Αναφορές modal εργασιών
   const m = $('#workModal');
   const workForm = $('#workForm');
   const workTitle = $('#workTitle');
   const workClose = $('#workClose');
   const btnWorkCancel = $('#btnWorkCancel');
 
+  // Άνοιγμα/κλείσιμο modal χωρίς αλλαγή λογικής φόρμας
   function openModal() { m?.setAttribute('aria-hidden', 'false'); }
   function closeModal() { m?.setAttribute('aria-hidden', 'true'); workForm?.reset(); workForm.dataset.id = ''; }
 
+  // Βοηθητικό για μηνύματα
   const say = (msg) => (window.toast ? window.toast(msg) : alert(msg));
 
   // ---------- labels ----------
+  // Ετικέτες κατάστασης / κλάσεις / λόγοι ραντεβού
   const GSTATUS = {
     CREATED: 'Δημιουργημένο',
     IN_PROGRESS: 'Σε εξέλιξη',
@@ -34,8 +39,10 @@
   const GREASON = { service: 'Σέρβις', repair: 'Επιδιόρθωση' };
 
   // ---------- tz-safe helpers ----------
+  // Συμπλήρωση 2 ψηφίων (χρησιμοποιείται όπου χρειάζεται)
   const pad2 = (n) => String(n).padStart(2, '0');
 
+  // Μορφοποίηση "YYYY-MM-DDTHH:mm[:ss]" σε "d/m/y στις hh:mm"
   function fmt(dt) {
     if (!dt) return '—';
     const s = String(dt).replace(' ', 'T');
@@ -46,7 +53,7 @@
     return `${d}/${m}/${y} στις ${hh}:${mm}`;
   }
 
-  // "YYYY-MM-DD" + "HH:mm[:ss]" -> "YYYY-MM-DDTHH:mm"
+  // "YYYY-MM-DD" + "HH:mm[:ss]" -> "YYYY-MM-DDTHH:mm" (fallback σε a.startsAt)
   function normalizeStart(a) {
     const d = (a?.appt_date || '').slice(0, 10);
     let t = (a?.appt_time || '').slice(0, 5);
@@ -54,6 +61,7 @@
     return `${d}T${t}`;
   }
 
+  // Παραγωγή κειμένου οχήματος από διάφορες πιθανές ιδιότητες
   function vehicleText(a) {
     const byLabel = a?.vehicle_label?.trim();
     if (byLabel) return byLabel;
@@ -66,29 +74,32 @@
   }
 
   // ---------- state ----------
+  // Κατάσταση σελίδας: τρέχων χρήστης, λίστα ραντεβού, φίλτρα
   const state = { me: null, items: [], date: '', status: '' };
 
   // ---------- auth + boot ----------
+  // Εκκίνηση όταν φορτωθεί το DOM
   window.addEventListener('DOMContentLoaded', init);
 
   async function init() {
     try {
+      // Έλεγχος αυθεντικοποίησης και ρόλου (μηχανικός)
       const auth = await api('/api/auth/me');
       const me = auth?.user || auth;
       if (!me || me.role !== 'mechanic') return location.href = '/login.html';
       state.me = me;
 
-      // navbar
+      // Ενημέρωση navbar με όνομα
       const fullName = [me.first_name, me.last_name].filter(Boolean).join(' ') || me.username || 'Μηχανικός';
       $('#navUser') && ($('#navUser').textContent = fullName);
 
-      // logout
+      // Logout action
       document.addEventListener('click', async (e) => {
         const b = e.target.closest('[data-action="logout"]'); if (!b) return;
         await api('/api/auth/logout', { method: 'POST' }); location.href = '/login.html';
       });
 
-      // filters
+      // Φίλτρα: αλλαγή ημερομηνίας/κατάστασης και καθαρισμός
       dateFilter?.addEventListener('change', () => { state.date = dateFilter.value || ''; load(); });
       statusFilter?.addEventListener('change', () => { state.status = statusFilter.value || ''; load(); });
       btnClear?.addEventListener('click', () => {
@@ -98,13 +109,15 @@
         load();
       });
 
-      // modal events
+      // Modal events: κλείσιμο με Χ, με Άκυρο ή κλικ έξω
       workClose?.addEventListener('click', closeModal);
       btnWorkCancel?.addEventListener('click', closeModal);
       m?.addEventListener('click', (e) => { if (e.target === m) closeModal(); });
 
+      // Υποβολή φόρμας εργασίας
       workForm?.addEventListener('submit', onSaveWork);
 
+      // Αρχικό load ραντεβού
       load();
     } catch (err) {
       console.error(err);
@@ -113,12 +126,14 @@
   }
 
   // ---------- load appointments ----------
+  // Φέρνει ραντεβού για τον τρέχοντα μηχανικό (με φίλτρα) και αποδίδει UI
   async function load() {
-    // προσπαθούμε να φέρουμε "μόνα μου"
+    // Δημιουργία query-string βάσει φίλτρων
     const p = new URLSearchParams();
     if (state.status) p.set('status', state.status);
     if (state.date) p.set('from', state.date), p.set('to', state.date);
 
+    // Προσπάθεια διαφόρων endpoints για "τα δικά μου" ραντεβού
     let res;
     try { res = await api('/api/appointments?mine=1&' + p.toString()); }
     catch {
@@ -126,17 +141,18 @@
       catch { res = await api('/api/appointments?' + p.toString()); }
     }
 
+    // Κανονικοποίηση λίστας
     let items = Array.isArray(res?.items) ? res.items : (Array.isArray(res) ? res : []);
-    // fallback φίλτρο, αν ο server δεν φιλτράρει
+    // Επιπλέον client-side φίλτρο αν ο server δεν φιλτράρει
     items = items.filter(a => Number(a.mechanic_id ?? a.mechanic?.id) === Number(state.me.id));
 
     state.items = items;
     render(items);
-    renderVehiclesFromAppointments(items); // <-- ΠΡΟΣΘΗΚΗ
-
+    renderVehiclesFromAppointments(items); // Απόδοση λίστας σχετικών οχημάτων (μόνο προβολή)
   }
 
   // ---------- render ----------
+  // Απόδοση καρτών ραντεβού στη σελίδα
   function render(list) {
     grid.innerHTML = '';
     if (!list.length) {
@@ -156,9 +172,11 @@
       const reason = GREASON[a.reason] || a.reason || '—';
       const total = a.total_cost == null ? '—' : `€${a.total_cost}`;
 
+      // Κάρτα ραντεβού
       const card = document.createElement('article');
       card.className = 'card appt';
 
+      // Κεφαλίδα: κωδικός + ημερομηνία/ώρα
       const head = document.createElement('div');
       head.className = 'appt__row appt__row--between';
       head.innerHTML = `
@@ -166,6 +184,7 @@
         <div class="appt__meta">${when}</div>`;
       card.appendChild(head);
 
+      // Badges: κατάσταση + λόγος
       const badges = document.createElement('div');
       badges.className = 'appt__row';
       badges.innerHTML = `
@@ -173,6 +192,7 @@
         <span class="badge">${reason}</span>`;
       card.appendChild(badges);
 
+      // Κύριο σώμα: πελάτης, μηχανικός, όχημα, σύνολο
       const body = document.createElement('div');
       body.className = 'appt__grid';
       body.innerHTML = `
@@ -182,7 +202,7 @@
         <div><div class="appt__label">Σύνολο</div><div class="appt__value">${total}</div></div>`;
       card.appendChild(body);
 
-      // φόρμα εργασίας ΜΟΝΟ όταν είναι ΣΕ ΕΞΕΛΙΞΗ
+      // Γρήγορη προσθήκη εργασίας εμφανίζεται μόνο όταν είναι "Σε εξέλιξη"
       if (st === 'IN_PROGRESS') {
         const workBox = document.createElement('div');
         workBox.className = 'field';
@@ -207,8 +227,9 @@
     grid.appendChild(frag);
   }
 
-  // inline γρήγορη προσθήκη
+  // Inline γρήγορη προσθήκη εργασίας ή άνοιγμα modal φόρμας
   grid.addEventListener('click', async (e) => {
+    // Κουμπί "Προσθήκη" (inline)
     const add = e.target.closest('.js-add');
     if (add) {
       const id = Number(add.dataset.id);
@@ -228,6 +249,7 @@
       } catch (err) { console.error(err); say(err?.error || 'Αποτυχία προσθήκης εργασίας.'); }
     }
 
+    // Κουμπί "Σε φόρμα…" (άνοιγμα modal)
     const open = e.target.closest('.js-open-modal');
     if (open) {
       workForm.dataset.id = String(open.dataset.id);
@@ -236,7 +258,7 @@
     }
   });
 
-  // modal submit
+  // Υποβολή modal εργασίας
   async function onSaveWork(ev) {
     ev.preventDefault();
     const id = Number(workForm.dataset.id || 0);
@@ -271,6 +293,7 @@
 })();
 
 // ΦΙΛΙΚΑ LABELS
+// Χαρτογράφηση type οχήματος -> ελληνικό label
 const TYPE_LABEL = {
   passenger: 'επιβατικό',
   truck: 'φορτηγό',
@@ -280,13 +303,15 @@ const TYPE_LABEL = {
   hatchback: 'hatchback'
 };
 
-// Φερ’ τα οχήματα για πολλά ids (δοκιμάζει /api/vehicles?ids=1,2,3 αλλιώς 1-1)
+// Φέρνει οχήματα για πολλά ids
+// 1) Προσπαθεί batch endpoint /api/vehicles?ids=...,
+// 2) Αλλιώς κάνει fallback σε 1-1 κλήσεις.
 async function fetchVehiclesByIds(ids) {
   const out = new Map();
   const uniq = [...new Set(ids.filter(Boolean))];
   if (!uniq.length) return out;
 
-  // 1) προσπάθησε batch
+  // 1) batch ανάκτηση
   try {
     const res = await api(`/api/vehicles?ids=${uniq.join(',')}`);
     const arr = Array.isArray(res?.items) ? res.items : (Array.isArray(res) ? res : []);
@@ -294,7 +319,7 @@ async function fetchVehiclesByIds(ids) {
     if (out.size === uniq.length) return out;
   } catch {}
 
-  // 2) fallback: 1-1
+  // 2) fallback: μία-μία κλήση
   await Promise.all(uniq.map(async id => {
     if (out.has(id)) return;
     try {
@@ -305,20 +330,22 @@ async function fetchVehiclesByIds(ids) {
   return out;
 }
 
+// Απόδοση λίστας μοναδικών οχημάτων που σχετίζονται με τα εμφανιζόμενα ραντεβού (μόνο προβολή)
 async function renderVehiclesFromAppointments(list){
   const box = document.getElementById('vehList');
   if (!box) return;
 
-  // μαζεψε ids
+  // Συλλογή vehicle_ids από τα ραντεβού
   const ids = [];
   for (const a of (Array.isArray(list) ? list : [])) {
     const id = Number(a.vehicle_id || a.vehicle?.id || 0);
     if (id) ids.push(id);
   }
-  // φέρε metadata
+
+  // Μεταδεδομένα οχημάτων
   const meta = await fetchVehiclesByIds(ids);
 
-  // φτιάξε μοναδική λίστα
+  // Μοναδική λίστα (by id ή by label/type)
   const seen = new Map();
   for (const a of list) {
     const v = meta.get(Number(a.vehicle_id)) || a.vehicle || {};
@@ -349,6 +376,7 @@ async function renderVehiclesFromAppointments(list){
     return;
   }
 
+  // Απόδοση καρτών οχημάτων (μόνο ανάγνωση)
   const grid = document.createElement('div');
   grid.className = 'grid cols-3';
   for (const v of items) {
@@ -365,5 +393,6 @@ async function renderVehiclesFromAppointments(list){
   }
   box.replaceChildren(grid);
 }
+
 
 

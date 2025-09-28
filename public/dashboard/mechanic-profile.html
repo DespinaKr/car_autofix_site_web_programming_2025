@@ -1,67 +1,117 @@
 <!doctype html>
+<!-- DOCTYPE: Δήλωση HTML5 για σωστό rendering και πρότυπα -->
 <html lang="el">
+<!-- lang="el": Βοηθά προσβασιμότητα (screen readers) και SEO -->
+
 <head>
   <meta charset="utf-8"/>
+  <!-- UTF-8: Απαραίτητο για ελληνικούς χαρακτήρες -->
+
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <!-- Responsive meta: Κλίμακα/viewport για κινητά & tablets -->
+
   <title>Προφίλ · Μηχανικός · AutoFix</title>
+  <!-- Τίτλος σελίδας: εμφανίζεται στο tab/ιστορικό/SEO -->
 
   <link rel="stylesheet" href="/css/style.css"/>
   <link rel="stylesheet" href="/css/dash.css"/>
+  <!-- CSS: Βασικά styles + ειδικά του dashboard (σειρά φόρτωσης: το δεύτερο μπορεί να υπερκαλύψει κανόνες του πρώτου) -->
 
   <script defer src="/js/api.js"></script>
+  <!-- api.js: Βοηθητικές συναρτήσεις/API calls (fetch προς backend) -->
+
   <script defer src="/js/auth-guard.js"></script>
+  <!-- auth-guard.js: Έλεγχος session/JWT και πιθανό redirect αν δεν υπάρχει login -->
+
   <script defer src="/js/profile.mech.js?v=1"></script>
+  <!-- profile.mech.js: Λογική για φόρτωμα/επεξεργασία προφίλ μηχανικού.
+       ?v=1: απλό cache-busting query ώστε να ανανεώνεται εύκολα το script στο browser -->
 
   <style>
+    /* Εσωτερικά (inline) styles της σελίδας: μικρό, στοχευμένο CSS για το συγκεκριμένο view */
     .avatar-circle{width:84px;height:84px;border-radius:50%;display:grid;place-items:center;
       font:700 28px/1 Inter,system-ui;background:linear-gradient(135deg,#2563eb33,#1e3a8a33);
       border:1px solid rgba(255,255,255,.2);color:#eaf2ff}
+    /* avatar-circle: Εμφανίζει αρχικά (initials) του χρήστη σε κύκλο ως εναλλακτικό avatar */
+
     .profile-header{display:flex;align-items:center;gap:14px}
+    /* profile-header: Οριζόντια στοίχιση avatar + ονόματος + actions */
+
     .profile-actions{margin-left:auto;display:flex;gap:8px}
+    /* profile-actions: Σπρώχνει τα actions (π.χ. κουμπί Επεξεργασία) δεξιά */
+
     .details-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+    /* details-grid: 2-στήλη διάταξη για τα πεδία του προφίλ */
+
     .field{background:var(--panel);border:1px solid #1b2947;border-radius:12px;padding:12px}
     .field b{display:block;color:#bdc8de;font-size:12px;margin-bottom:4px}
+    /* field: “κάρτα” πεδίου με ετικέτα (b) και τιμή/είσοδο */
+
     .hidden{display:none}
+    /* .hidden: Utility class για απόκρυψη στοιχείων (προσοχή σε σύγκρουση με inline style) */
+
     .input{width:100%;background:transparent;border:1px solid #22345a;border-radius:8px;padding:8px}
+    /* input: βασικό styling input πεδίων */
   </style>
+  <!-- Σημείωση ασφάλειας (server-side): Συνιστάται Content-Security-Policy, HTTPOnly/SameSite cookies, και αποφυγή inline scripts -->
 </head>
 
 <body>
-  <!-- NAVBAR -->
+  <!-- NAVBAR: Γραμμή πλοήγησης του ρόλου "Μηχανικός" -->
   <div class="navbar">
     <a class="brand" href="/dashboard/mechanic.html">
       <img class="brand-logo" src="/img/logo.png" alt="AutoFix logo">
+      <!-- alt: Περιγραφή λογότυπου για screen readers -->
+
       <span>Μηχανουργείο AutoFix</span>
     </a>
+
     <div style="display:flex;gap:8px;align-items:center">
       <a class="btn ghost" href="/dashboard/mechanic.html">← Πίσω στον πίνακα</a>
+      <!-- Επιστροφή στον πίνακα ελέγχου του μηχανικού -->
+
       <span class="badge" id="navUser">—</span>
+      <!-- navUser: Θα ενημερωθεί δυναμικά (π.χ. εμφανίζει όνομα χρήστη/ρόλο) -->
+
       <button class="btn ghost" data-action="logout">Αποσύνδεση</button>
+      <!-- data-action="logout": Το JS θα κάνει bind handler για αποσύνδεση -->
     </div>
   </div>
 
   <main class="main">
     <h1 class="page-title">Προφίλ</h1>
     <div class="subtitle">Ενημέρωσε τα προσωπικά σου στοιχεία, ειδικότητα και τον κωδικό σου</div>
+    <!-- Υπότιτλος: Σύντομη περιγραφή λειτουργιών της σελίδας -->
 
-    <!-- Κάρτα Προφίλ -->
+    <!-- ΚΑΡΤΑ ΠΡΟΦΙΛ: Προβολή βασικών στοιχείων και κουμπί “Επεξεργασία” -->
     <section class="card">
       <div class="profile-header">
         <div id="profileAvatar" class="avatar-circle">ME</div>
+        <!-- profileAvatar: Placeholder με αρχικά (θα μπορούσε να παράγεται από first/last name στο JS) -->
+
         <div>
           <h2 data-field="full_name">Mechanic</h2>
+          <!-- data-field="full_name": Θα γεμίσει από profile.mech.js με το πλήρες όνομα -->
+
           <div id="profileStatus"><span class="badge green">Ενεργός</span></div>
+          <!-- profileStatus: Ενδεικτικό ενεργού/ανενεργού λογαριασμού (UI) -->
         </div>
+
         <div class="profile-actions">
           <button class="btn" id="btnProfileEdit">Επεξεργασία</button>
+          <!-- btnProfileEdit: Θα ενεργοποιεί λειτουργία επεξεργασίας (εμφάνιση editable inputs/φόρμας κωδικού) -->
         </div>
       </div>
 
       <div class="details-grid" style="margin-top:14px">
+        <!-- details-grid: Προβολή πεδίων προφίλ σε 2 στήλες -->
+
         <div class="field">
           <b>Όνομα</b>
           <div data-field="first_name" data-editable="true">—</div>
+          <!-- data-editable="true": Το JS μπορεί να μετατρέψει αυτό το div σε input κατά την επεξεργασία -->
         </div>
+
         <div class="field">
           <b>Επώνυμο</b>
           <div data-field="last_name" data-editable="true">—</div>
@@ -70,47 +120,65 @@
         <div class="field">
           <b>Email</b>
           <div data-field="email" data-editable="true">—</div>
+          <!-- Προσοχή: server-side validation για μορφή email & μοναδικότητα -->
         </div>
+
         <div class="field">
           <b>Όνομα χρήστη</b>
           <div data-field="username" data-editable="true">—</div>
+          <!-- username: Συνήθως μοναδικό – απαιτεί backend έλεγχο πριν αποθήκευση -->
         </div>
 
         <div class="field">
           <b>Αρ. Ταυτότητας</b>
           <div data-field="id_card" data-editable="true">—</div>
+          <!-- Ενδέχεται να απαιτείται μορφοποίηση/validation ανά χώρα -->
         </div>
+
         <div class="field">
           <b>Ειδικότητα</b>
           <div data-field="specialty" data-editable="true">—</div>
+          <!-- π.χ. Ηλεκτρολόγος, Μηχανικός κινητήρων κ.λπ. -->
         </div>
       </div>
     </section>
 
-    <!-- Ασφάλεια / Αλλαγή Κωδικού -->
+    <!-- ΑΣΦΑΛΕΙΑ / ΑΛΛΑΓΗ ΚΩΔΙΚΟΥ: Φόρμα που εμφανίζεται σε “Επεξεργασία” -->
     <section class="card">
       <div class="card-head"><h3>Ασφάλεια</h3></div>
+
+     
       <form id="pwdForm" class="hidden" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
         <div class="field">
           <b>Τρέχων κωδικός</b>
           <input class="input" type="password" name="current" placeholder="••••••••"/>
+          <!-- Προστασία: Μην στέλνετε ποτέ τον τρέχοντα κωδικό σε logs/analytics -->
         </div>
+
         <div class="field">
           <b>Νέος κωδικός</b>
           <input class="input" type="password" name="next" placeholder="τουλάχιστον 8 χαρακτήρες"/>
+          <!-- Συνίσταται πολιτική ισχυρού κωδικού (min length, αριθμοί, σύμβολα) + server-side validation -->
         </div>
+
         <div class="field">
           <b>Επανάληψη νέου</b>
           <input class="input" type="password" name="confirm" placeholder="ξανά"/>
+          <!-- Το JS/Server πρέπει να ελέγχει ταύτιση next === confirm πριν την αλλαγή -->
         </div>
+
         <div style="grid-column: 1 / -1; text-align:right;">
           <button class="btn" type="submit">Αλλαγή κωδικού</button>
+          <!-- Υποβολή: profile.mech.js θα κάνει preventDefault, έλεγχο και API call (π.χ. /me/change-password) -->
         </div>
       </form>
+
       <div class="subtitle">Η φόρμα εμφανίζεται όταν πατήσεις «Επεξεργασία».</div>
+      <!-- Υπενθύμιση UX: Η φόρμα είναι “κρυφή” μέχρι ο χρήστης να μπει σε edit mode -->
     </section>
 
     <div class="toast hidden"></div>
+    <!-- toast: Περιοχή για προσωρινά μηνύματα (success/error). Θα ενεργοποιείται από JS. -->
   </main>
 </body>
 </html>

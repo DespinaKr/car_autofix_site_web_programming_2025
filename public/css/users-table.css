@@ -1,91 +1,109 @@
 :root{
-  --row-bg: #0f1b31;
-  --row-border: #1b2947;
-  --head-bg: #223150;
-  --muted: #9fb1cf;
+  /* Tokens για το users table (χρώματα/τόνοι) */
+  --row-bg: #0f1b31;   /* Σκούρο φόντο γραμμής/κουτιού */
+  --row-border: #1b2947; /* Γραμμή διαχωρισμού/περίγραμμα */
+  --head-bg: #223150;  /* Φόντο κεφαλίδας πίνακα */
+  --muted: #9fb1cf;    /* Ήπιο κείμενο/λεζάντες */
 }
 
 /* Toolbar: 1) αναζήτηση 2) ρόλος 3) σύνολο (δεξιά) */
+/* Επάνω μπάρα φίλτρων: input αναζήτησης, select ρόλου, πληροφορία συνολικού πλήθους */
 .toolbar{
   display: grid;
-  grid-template-columns: 1fr 220px auto;
+  grid-template-columns: 1fr 220px auto; /* αναζήτηση (εύκαμπτη) | select (σταθερό) | συνολικό (auto) */
   gap: 12px;
   align-items: center;
   margin: 8px 0 12px;
 }
+/* Στυλ για text input wrapper (dark UI, στρογγυλεμένο) */
 .toolbar .input{ width:100%; min-width:0; background:transparent; border:1px solid #22345a; border-radius:10px; padding:10px 12px; }
+/* Στυλ για select ρόλου (ίδιος τόνος με input) */
 .toolbar .select{ width:100%; background:transparent; border:1px solid #22345a; border-radius:10px; padding:10px 12px; color:#cfe2ff; }
+/* Δεξιά πληροφορία συνολικού πλήθους (π.χ. "Σύνολο: 128") */
 #totalInfo{ justify-self:end; color: var(--muted); }
+/* Responsive: σε <=900px τα στοιχεία γίνονται κάθετα, και το σύνολο ευθυγραμμίζεται αριστερά */
 @media (max-width: 900px){
   .toolbar{ grid-template-columns: 1fr; }
   #totalInfo{ justify-self:start; margin-top:4px; }
 }
 
 /* Το “κουτί” του πίνακα περιλαμβάνει και το pager */
+/* Container που αγκαλιάζει head/rows/pager ώστε να έχει ενιαίο border/rounded */
 .users-wrap{
   margin-top: 12px;
   border: 1px solid var(--row-border);
   border-radius: 12px;
-  overflow: hidden;
+  overflow: hidden;          /* κόβει γωνίες/overflow από παιδιά */
   background: var(--row-bg);
-  padding: 0; /* το pager θα έχει δικό του padding */
+  padding: 0;                /* το pager διαχειρίζεται μόνο του το padding */
 }
 
 /* Ο ίδιος ο πίνακας δεν κρατάει πια border/rounded για να μην διπλώνουν */
+/* Grid “πίνακας” χωρίς extra περίγραμμα για να μην διπλοφαίνονται τα borders */
 .users-table{
   display: grid;
   gap: 0;
-  border: 0;            /* <-- ήταν 1px */
-  border-radius: 0;     /* <-- ήταν 12px */
+  border: 0;            /* <-- ήταν 1px (αποφεύγουμε διπλό περίγραμμα με .users-wrap) */
+  border-radius: 0;     /* <-- ήταν 12px (το rounded δίνεται από .users-wrap) */
 }
 
+/* Μία “γραμμή” ως CSS grid με στήλες για: USER | ΡΟΛΟΣ | ΚΑΤΑΣΤΑΣΗ | DETAILS | ΕΝΕΡΓΕΙΕΣ */
 .users-row{
   display: grid;
-  grid-template-columns: 2.2fr 1fr 1fr 1.6fr .8fr; /* USER | ΡΟΛΟΣ | ΚΑΤΑΣΤΑΣΗ | DETAILS | ΕΝΕΡΓΕΙΕΣ */
+  grid-template-columns: 2.2fr 1fr 1fr 1.6fr .8fr; /* αναλογίες πλατών στη desktop διάταξη */
   align-items: center;
   gap: 12px;
   padding: 14px 16px;
   background: var(--row-bg);
-  border-top: 1px solid var(--row-border);
+  border-top: 1px solid var(--row-border); /* separator μεταξύ γραμμών */
 }
+/* Η πρώτη γραμμή δεν χρειάζεται επάνω border */
 .users-row:first-child{ border-top: 0; }
 
+/* Κεφαλίδα πίνακα (head row): σκούρο φόντο και πιο έντονο κείμενο */
 .users-head{
   background: var(--head-bg);
   font-weight: 600;
   color: #cfe2ff;
 }
 
+/* Βασικό cell με truncation δυνατότητα (min-width:0 για να δουλέψει ellipsis στα περιεχόμενα) */
 .users-cell{ min-width: 0; }
 .users-cell .muted{ color: var(--muted); }
 
+/* Πρώτη στήλη: avatar + κείμενα ονόματος/email με truncation */
 .user-main{ display:flex; gap:12px; align-items:center; min-width:0; }
+/* Στρογγυλό avatar με γραμμικό gradient και αρχικά χρήστη */
 .user-main .av{
   width:40px; height:40px; border-radius:50%; display:grid; place-items:center;
   border:1px solid #2a3a63; color:#eaf2ff;
   background:linear-gradient(135deg,#0b2b6a50,#0a164a50);
   font-weight:700;
 }
-.user-main .txt{ min-width:0; }
+.user-main .txt{ min-width:0; } /* επιτρέπει στα παιδιά να κάνουν ellipsis */
 .user-main .txt .name{ font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .user-main .txt .email{ color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 
+/* Badges κατάστασης/ρόλου με διακριτικές παλέτες */
 .badge{ border-radius:999px; padding:4px 10px; border:1px solid #26406a; display:inline-flex; gap:6px; align-items:center; white-space:nowrap; }
-.badge.blue{ background:#0f1e2a; color:#cfe2ff; }
-.badge.green{ background:#0f2a1a; border-color:#174d32; color:#bcebd0; }
-.badge.orange{ background:#2a1e0f; border-color:#6a4a26; color:#ffddae; }
+.badge.blue{ background:#0f1e2a; color:#cfe2ff; }           /* γενικό/πληροφοριακό */
+.badge.green{ background:#0f2a1a; border-color:#174d32; color:#bcebd0; } /* ενεργό/επιτυχία */
+.badge.orange{ background:#2a1e0f; border-color:#6a4a26; color:#ffddae; } /* προειδοποίηση */
 
+/* Action buttons (edit/view/delete κ.λπ.) δεξιά, με μικρό hover feedback */
 .actions{ display:flex; gap:14px; justify-content:flex-end; }
 .icon{ background:transparent; border:0; color:#cfe2ff; opacity:.9; cursor:pointer }
 .icon:hover{ opacity:1; transform:translateY(-1px) }
 .icon svg{ width:18px; height:18px; display:block }
-.icon.danger{ color:#f59a9a }
-.icon.primary{ color:#7aa3ff }
+.icon.danger{ color:#f59a9a }  /* χρώμα για ενέργειες διαγραφής */
+.icon.primary{ color:#7aa3ff } /* χρώμα για κύριες ενέργειες */
 
 /* Εμφάνιση “Δεν βρέθηκαν…” ως σειρά */
+/* Μήνυμα κενής λίστας με διακεκομμένη διαχωριστική γραμμή */
 .list-empty{ padding:16px; text-align:center; color:#93a4c3; border-top:1px dashed var(--row-border) }
 
 /* Pager μέσα στο ίδιο κουτί */
+/* Σελιδοποίηση στο κάτω μέρος του .users-wrap με ομοιόμορφο padding */
 .users-wrap .footer-pager{
   display:flex; justify-content:space-between; align-items:center;
   padding: 12px 16px;
@@ -93,26 +111,33 @@
   background: transparent;
 }
 
+/* Προσαρμογές πλάτους στηλών σε medium screens */
 @media(max-width: 1100px){
   .users-row{ grid-template-columns: 1.7fr .9fr .9fr 1.2fr .7fr; }
 }
+/* Σε <=860px γίνεται μονοστήλη για καλύτερη αναγνωσιμότητα σε κινητά */
 @media(max-width: 860px){
   .users-row{ grid-template-columns: 1fr; gap:8px; }
-  .actions{ justify-content:flex-start; }
+  .actions{ justify-content:flex-start; } /* τα actions πάνε κάτω αριστερά */
 }
+
 /* ---------- Modal (edit user) ---------- */
+/* Utility για γρήγορο κρύψιμο στοιχείων */
 .hidden{ display: none !important; }
 
+/* Βασικό overlay modal: κεντράρισμα με CSS grid και ημιδιαφανές μαύρο */
 .modal{
   position: fixed;
   inset: 0;
   display: grid;
   place-items: center;
   background: rgba(0,0,0,.45);
-  z-index: 2000;
+  z-index: 2000; /* πάνω από το κύριο UI */
 }
+/* Επιπλέον class για πλήρη απόκρυψη modal όταν θέλουμε (JS toggle) */
 .modal.hidden{ display: none !important; }
 
+/* Κάρτα περιεχομένου modal (responsive πλάτος, dark card) */
 .modal-card{
   width: min(720px, 95vw);
   background: #0c172b;
@@ -122,6 +147,7 @@
   box-shadow: 0 10px 30px rgba(0,0,0,.5);
 }
 
+/* Κεφαλίδα modal: τίτλος αριστερά, κουμπί κλεισίματος δεξιά */
 .modal-head{
   display:flex;
   justify-content:space-between;
@@ -129,12 +155,15 @@
   margin-bottom:10px;
 }
 
+/* Grid φόρμας: 2 στήλες σε desktop, ομοιόμορφο gap */
 .form-grid{
   display:grid;
   grid-template-columns: 1fr 1fr;
   gap:12px;
 }
+/* Ετικέτες πάνω από inputs (stacked) με ελαφρύ spacing */
 .form-grid label{ display:grid; gap:6px; color:#cfe2ff; }
+/* Inputs σε dark scheme με στρογγυλεμένες γωνίες */
 .form-grid .input,
 .form-grid input{
   background:transparent;
@@ -144,6 +173,7 @@
   color:#e8f0ff;
 }
 
+/* Περιοχή extra πεδίων ανά ρόλο: πιάνει όλο το πλάτος και χωρίζεται σε 2 στήλες */
 .role-extra{
   grid-column:1/-1;
   display:grid;
@@ -151,6 +181,7 @@
   gap:12px;
 }
 
+/* Περιοχή κουμπιών στο κάτω μέρος της φόρμας, δεξιά στοίχιση */
 .modal-actions{
   grid-column:1/-1;
   display:flex;
@@ -159,6 +190,7 @@
   margin-top:8px;
 }
 
+/* Σε κινητά η φόρμα γίνεται μονοστήλη (στοίχιση κάθετα) */
 @media (max-width:760px){
   .form-grid, .role-extra{ grid-template-columns: 1fr; }
 }

@@ -1,63 +1,109 @@
 <!doctype html>
+<!-- DOCTYPE: Δήλωση HTML5 για σωστό rendering & πρότυπα -->
 <html lang="el">
+<!-- lang="el": Βοηθά προσβασιμότητα (screen readers) & SEO -->
+
 <head>
   <meta charset="utf-8" />
+  <!-- UTF-8: Υποστήριξη ελληνικών χαρακτήρων -->
+
   <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <!-- Responsive meta: Εξασφαλίζει σωστή κλίμακα σε κινητά/tablets -->
+
   <title>Προφίλ · Γραμματέας · AutoFix</title>
+  <!-- Τίτλος σελίδας: εμφανίζεται στο tab/ιστορικό/SEO -->
 
   <link rel="stylesheet" href="/css/style.css" />
   <link rel="stylesheet" href="/css/dash.css" />
+  <!-- CSS: Βασικό style + ειδικά styles για dashboard. Το δεύτερο μπορεί να υπερκαλύψει κανόνες του πρώτου. -->
 
   <script defer src="/js/api.js"></script>
+  <!-- api.js: Κοινές κλήσεις προς backend (fetch/AJAX), helpers -->
+
   <script defer src="/js/auth-guard.js"></script>
+  <!-- auth-guard.js: Έλεγχος session/JWT και πιθανό redirect αν δεν υπάρχει login -->
+
   <script defer src="/js/secretary.profile.js"></script>
+  <!-- secretary.profile.js: Λογική φόρτωσης/επεξεργασίας προφίλ γραμματέα (binds, events, API calls) -->
 
   <style>
+    /* Inline CSS: Στοχευμένα styles για το συγκεκριμένο view */
     .avatar-circle{width:84px;height:84px;border-radius:50%;display:grid;place-items:center;font:700 28px/1 Inter,system-ui;background:linear-gradient(135deg,#2563eb33,#1e3a8a33);border:1px solid rgba(255,255,255,.2);color:#eaf2ff}
+    /* Εμφάνιση αρχικών χρήστη σε κύκλο, fallback όταν δεν υπάρχει εικόνα avatar */
+
     .profile-header{display:flex;align-items:center;gap:14px}
+    /* Οριζόντια στοίχιση avatar + τίτλου + actions */
+
     .profile-actions{margin-left:auto}
+    /* Σπρώχνει τα actions δεξιά (flex grow space) */
+
     .details-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+    /* 2 στήλες για τα πεδία προφίλ */
+
     .field{background:var(--panel);border:1px solid #1b2947;border-radius:12px;padding:12px}
     .field b{display:block;color:#bdc8de;font-size:12px;margin-bottom:4px}
+    /* “Κάρτες” πεδίων με ετικέτα (b) και τιμή/είσοδο */
+
     .hidden{display:none}
+    /* Utility class για απόκρυψη στοιχείων (προσοχή σε σύγκρουση με inline display) */
+
     .input{width:100%;background:transparent;border:1px solid #22345a;border-radius:8px;padding:8px}
+    /* Βασικό styling input πεδίων */
   </style>
+  <!-- Σημείωση ασφάλειας (server-side): Συνιστάται Content-Security-Policy, HTTPOnly/SameSite cookies, αποφυγή inline JS. -->
 </head>
 
 <body>
+  <!-- NAVBAR: Κύρια γραμμή πλοήγησης -->
   <div class="navbar">
     <a class="brand" href="/" aria-label="Αρχική">
+      <!-- aria-label: Περιγραφή προορισμού για screen readers -->
       <img class="brand-logo" src="/img/logo.png" alt="AutoFix">
+      <!-- alt: Περιγραφή λογότυπου για προσβασιμότητα -->
       <span>Μηχανουργείο AutoFix</span>
     </a>
+
     <div style="display:flex;gap:8px;align-items:center">
       <span class="badge" id="navUser">Admin Secretary</span>
+      <!-- navUser: Θα ενημερωθεί δυναμικά (π.χ. με όνομα/ρόλο) από JS -->
+
       <button class="btn ghost" data-action="logout">Αποσύνδεση</button>
+      <!-- data-action="logout": Ο handler στο JS θα εκτελέσει την αποσύνδεση -->
     </div>
   </div>
 
+  <!-- SIDEBAR: Πλοήγηση εντός του dashboard γραμματέα -->
   <aside class="sidebar">
     <a href="/dashboard/secretary.html">Πίνακας Ελέγχου</a>
     <a class="active" href="/dashboard/profile.html">Προφίλ</a>
     <a href="/dashboard/users.html">Χρήστες</a>
     <a href="/dashboard/vehicles.html">Οχήματα</a>
     <a href="/dashboard/appointments.html">Ραντεβού</a>
+    <!-- “active” κλάση: δηλώνει την τρέχουσα σελίδα -->
   </aside>
 
   <main class="main">
     <h1 class="page-title">Προφίλ</h1>
     <div class="subtitle">Manage your personal information and account settings</div>
+    
 
-    <!-- Κάρτα Προφίλ -->
+    <!-- ΚΑΡΤΑ ΠΡΟΦΙΛ: Επισκόπηση και κουμπί “Επεξεργασία” -->
     <section class="card">
       <div class="profile-header">
         <div id="profileAvatar" class="avatar-circle">AS</div>
+        <!-- Placeholder αρχικών (θα μπορούσε να προκύπτει από first/last name στο JS) -->
+
         <div>
           <h2 data-field="full_name">Admin Secretary</h2>
+          <!-- data-field="full_name": Θα γεμίσει από secretary.profile.js με πλήρες όνομα -->
+
           <div id="profileStatus"><span class="badge green">Ενεργός</span></div>
+          <!-- Ενδεικτικό κατάστασης χρήστη -->
         </div>
+
         <div class="profile-actions">
           <button class="btn" id="btnProfileEdit">Επεξεργασία</button>
+          <!-- Ενεργοποιεί edit mode (π.χ. μετατροπή divs με data-editable σε inputs + εμφάνιση φόρμας κωδικού) -->
         </div>
       </div>
 
@@ -65,7 +111,9 @@
         <div class="field">
           <b>Όνομα</b>
           <div data-field="first_name" data-editable="true">Admin</div>
+          <!-- data-editable="true": Το JS μπορεί να μετατρέψει το div σε input κατά την επεξεργασία -->
         </div>
+
         <div class="field">
           <b>Επώνυμο</b>
           <div data-field="last_name" data-editable="true">Secretary</div>
@@ -74,62 +122,84 @@
         <div class="field">
           <b>Email</b>
           <div data-field="email" data-editable="true">admin@garage.com</div>
+          <!-- Προτείνεται server-side validation (μορφή email/μοναδικότητα) -->
         </div>
+
         <div class="field">
           <b>Όνομα Χρήστη</b>
           <div data-field="username">admin</div>
+          <!-- Συνήθως μη-editable για λόγους μοναδικότητας/ταυτοποίησης -->
         </div>
 
         <div class="field">
           <b>Αριθμός Ταυτότητας</b>
           <div data-field="id_number" data-editable="true">N/A</div>
+         
         </div>
+
         <div class="field">
           <b>Ρόλος</b>
           <div data-field="role">Γραμματέας</div>
+          <!-- Ρόλος συστήματος: καθορίζει δικαιώματα/πρόσβαση -->
         </div>
       </div>
     </section>
 
-    <!-- Account Info -->
+    <!-- ΛΟΓΑΡΙΑΣΜΟΣ: Πρόσθετες πληροφορίες -->
     <section class="card">
       <div class="card-head"><h3>Account Information</h3></div>
+
+
       <div class="details-grid">
         <div class="field">
           <b>Account Status</b>
           <div data-field="status"><span class="badge green">Ενεργός</span></div>
+          <!-- Εμφάνιση κατάστασης λογαριασμού (ενεργός/ανενεργός) -->
         </div>
+
         <div class="field">
           <b>User ID</b>
           <div><span data-field="user_id">admin_001</span></div>
+          <!-- Εσωτερικό αναγνωριστικό χρήστη (π.χ. για υποστήριξη/αναζήτηση) -->
         </div>
       </div>
     </section>
 
-    <!-- Ασφάλεια / Αλλαγή Κωδικού -->
+    <!-- ΑΣΦΑΛΕΙΑ / Αλλαγή κωδικού -->
     <section class="card">
       <div class="card-head"><h3>Ασφάλεια</h3></div>
+
       <form id="pwdForm" class="hidden" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
         <div class="field">
           <b>Τρέχων κωδικός</b>
           <input class="input" type="password" name="current" placeholder="••••••••" />
+          <!-- Μην καταγράφετε ποτέ τον τρέχοντα κωδικό σε logs/analytics -->
         </div>
+
         <div class="field">
           <b>Νέος κωδικός</b>
           <input class="input" type="password" name="next" placeholder="τουλάχιστον 8 χαρακτήρες" />
+          <!-- Επιβάλτε πολιτική ισχυρού κωδικού (min length, αριθμοί/σύμβολα) στο server & προαιρετικά στο UI -->
         </div>
+
         <div class="field">
           <b>Επανάληψη νέου</b>
           <input class="input" type="password" name="confirm" placeholder="ξανά" />
+          <!-- Έλεγχος ταύτισης new === confirm στο JS και server-side -->
         </div>
+
         <div style="grid-column: 1 / -1; text-align:right;">
           <button class="btn" type="submit">Αλλαγή κωδικού</button>
+          <!-- Το JS θα κάνει preventDefault, validation και API call (π.χ. PATCH /api/users/me/password) -->
         </div>
       </form>
+
       <div class="subtitle">Η αλλαγή κωδικού εμφανίζεται μόνο όταν πατήσεις «Επεξεργασία».</div>
+      <!-- UX hint: Η φόρμα κωδικού είναι “κρυφή” μέχρι το edit mode -->
     </section>
 
     <div class="toast hidden"></div>
+    <!-- toast: Περιοχή για προσωρινά μηνύματα (success/error). Θα ελέγχεται από JS. -->
   </main>
 </body>
 </html>

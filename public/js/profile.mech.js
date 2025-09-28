@@ -2,20 +2,24 @@
 (function () {
   'use strict';
 
+  // Συντομεύσεις για DOM επιλογές
   const $  = (s, r=document) => r.querySelector(s);
   const $$ = (s, r=document) => [...r.querySelectorAll(s)];
 
   // helpers
+  // Badge κατάστασης (δέχεται boolean ή string που περιέχει "ACT")
   const statusBadge = (activeOrStatus) => {
     const on = typeof activeOrStatus === 'string'
       ? activeOrStatus.toUpperCase().includes('ACT')
       : !!activeOrStatus;
     return `<span class="badge ${on ? 'green' : 'orange'}">${on ? 'Ενεργός' : 'Ανενεργός'}</span>`;
   };
+  // Αρχικά ονόματος (π.χ. "ΓΚ" από "Γιώργος Κ.")
   const initials = (name) => {
     const p = String(name || '').trim().split(/\s+/).filter(Boolean);
     return ((p[0]?.[0] || '') + (p[1]?.[0] || '')).toUpperCase() || 'ME';
   };
+  // Απλό toast (fallback σε alert)
   function toast(msg){
     const t = $('.toast'); if (!t) { alert(msg); return; }
     t.textContent = msg; t.classList.remove('hidden'); t.style.opacity='1';
@@ -23,6 +27,7 @@
   }
 
   // normalize
+  // Κανονικοποίηση αντικειμένου χρήστη ώστε το UI να δουλεύει με σταθερά κλειδιά
   function normUser(u){
     if (!u) return null;
     const first = u.first_name || u.firstName || '';
@@ -44,40 +49,45 @@
   }
 
   // refs
+  // Αναφορές σε βασικά στοιχεία της σελίδας προφίλ
   const btnEdit  = $('#btnProfileEdit');
   const avatar   = $('#profileAvatar');
   const statusEl = $('#profileStatus');
   const pwdForm  = $('#pwdForm');
 
+  // Πεδία που θα ρεντεριστούν στο UI (πρέπει να υπάρχουν ως data-field στο HTML)
   const FIELD_KEYS = [
     'first_name','last_name','email','username',
     'id_card','specialty','full_name','status'
   ];
 
+  // Κατάσταση module
   const state = { me:null, data:null, editing:false };
 
   // boot
+  // Εκκίνηση μόλις φορτώσει το DOM
   window.addEventListener('DOMContentLoaded', init);
 
   async function init(){
     try{
+      // Έλεγχος αυθεντικοποίησης/ρόλου: μόνο μηχανικός
       const auth = await api('/api/auth/me');
       const me = auth?.user || auth;
       if (!me || me.role !== 'mechanic') { location.href='/login.html'; return; }
       state.me = me;
 
-      // navbar
+      // Ενημέρωση ονόματος στο navbar
       const fullName = [me.first_name, me.last_name].filter(Boolean).join(' ') || me.username || 'Μηχανικός';
       const navUser = $('#navUser'); if (navUser) navUser.textContent = fullName;
 
-      // logout
+      // Logout handler (σε όλο το έγγραφο)
       document.addEventListener('click', async (e)=>{
         const b = e.target.closest('[data-action="logout"]'); if (!b) return;
         await api('/api/auth/logout', { method:'POST' });
         location.href='/login.html';
       });
 
-      // profile data: merge /users/me with /auth/me to καλύψουμε ελλείψεις
+      // Φόρτωση στοιχείων προφίλ: συνένωση /users/me με /auth/me για κάλυψη ελλείψεων
       let raw = null;
       try { raw = await api('/api/users/me'); } catch {}
       const merged = { ...me, ...(raw || {}) };
@@ -91,13 +101,15 @@
   }
 
   // render
+  // Θέτει τιμή σε όλα τα στοιχεία με data-field="key"
   function setField(key, val){
     $$(`[data-field="${key}"]`).forEach(el=>{
       if (key === 'status'){ el.innerHTML = statusBadge(val); return; }
       const txt = (val == null || String(val).trim() === '') ? '—' : String(val);
-      el.textContent = txt; el.dataset.original = txt;
+      el.textContent = txt; el.dataset.original = txt; // κρατάμε την αρχική τιμή για diff
     });
   }
+  // Γενική απόδοση καρτέλας
   function render(d){
     if (avatar)   avatar.textContent = initials(d.full_name);
     if (statusEl) statusEl.innerHTML = statusBadge(d.status);
@@ -105,6 +117,7 @@
   }
 
   // edit/save
+  // Είσοδος σε λειτουργία επεξεργασίας: αλλάζει κουμπί, δημιουργεί inputs, δείχνει φόρμα κωδικού
   function enterEdit(){
     state.editing = true;
     if (btnEdit){ btnEdit.textContent='Αποθήκευση'; btnEdit.classList.remove('ghost'); }
@@ -118,7 +131,7 @@
       cancel.addEventListener('click', exitEdit);
     }
     $$('[data-field][data-editable="true"]').forEach(el=>{
-      if (el.querySelector('input')) return;
+      if (el.querySelector('input')) return; // αν έχει ήδη input, άστο
       const value = (el.textContent || '').trim();
       const input = document.createElement('input');
       input.className = 'input';
@@ -126,9 +139,10 @@
       input.dataset.key = el.dataset.field;
       el.innerHTML = ''; el.appendChild(input);
     });
-    pwdForm?.classList.remove('hidden');
+    pwdForm?.classList.remove('hidden'); // εμφάνιση φόρμας αλλαγής κωδικού
   }
 
+  // Έξοδος από επεξεργασία: επαναφορά τιμών και απόκρυψη φόρμας κωδικού
   function exitEdit(){
     state.editing = false;
     if (btnEdit) btnEdit.textContent='Επεξεργασία';
@@ -140,6 +154,7 @@
     pwdForm?.classList.add('hidden');
   }
 
+  // Μαζεύει αλλαγές από editable πεδία και φτιάχνει payload για PATCH
   function collectPatch(){
     const patch = {};
     $$('[data-field][data-editable="true"]').forEach(el=>{
@@ -156,10 +171,12 @@
     return patch;
   }
 
+  // Αποθήκευση αλλαγών προφίλ (PATCH /api/users/me)
   async function save(){
     const patch = collectPatch();
     if (Object.keys(patch).length === 0){ exitEdit(); return; }
 
+    // Απλός έλεγχος εγκυρότητας email
     if (patch.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(patch.email)){
       alert('Μη έγκυρο email.'); return;
     }
@@ -177,6 +194,7 @@
   }
 
   // change password
+  // Υποβολή φόρμας αλλαγής κωδικού (βασικοί έλεγχοι, κλήση API)
   pwdForm?.addEventListener('submit', async (e)=>{
     e.preventDefault();
     const fd = new FormData(pwdForm);
@@ -198,5 +216,6 @@
     }
   });
 
+  // Toggle κουμπιού "Επεξεργασία/Αποθήκευση"
   btnEdit?.addEventListener('click', ()=> state.editing ? save() : enterEdit());
 })();

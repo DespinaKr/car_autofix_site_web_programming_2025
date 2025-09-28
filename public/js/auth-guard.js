@@ -1,45 +1,52 @@
 // public/js/auth-guard.js
 (function () {
-  const Q = (s, r = document) => r.querySelector(s);
-  const QA = (s, r = document) => Array.from(r.querySelectorAll(s));
+  // Συντομεύσεις για DOM επιλογές
+  const Q = (s, r = document) => r.querySelector(s);            // Πρώτο στοιχείο που ταιριάζει
+  const QA = (s, r = document) => Array.from(r.querySelectorAll(s)); // Όλα τα στοιχεία που ταιριάζουν (Array)
 
+  // Απόπειρα λήψης session χρήστη από backend
   async function getMe() {
     try { return await api('/api/auth/me'); }
-    catch { return { user: null }; }
+    catch { return { user: null }; } // Σε αποτυχία, επιστρέφει δομή χωρίς χρήστη
   }
 
+  // Χαρτογράφηση ρόλου -> αρχική σελίδα dashboard για τον ρόλο
   function roleDash(role) {
     if (role === 'secretary') return '/dashboard/secretary.html';
     if (role === 'mechanic') return '/dashboard/mechanic.html';
     return '/dashboard/customer.html';
   }
 
+  // Δημιουργία αρχικών ονόματος (π.χ. "Ν Γ" από "Νίκος Γεωργίου")
   function initials(name = '') {
     const parts = (name || '').trim().split(/\s+/).slice(0, 2);
     return parts.map(s => s[0]?.toUpperCase() || '').join('');
   }
 
+  // Έλεγχος τρέχουσας διαδρομής (pathname) με regex
   function on(pathRe) { return pathRe.test(location.pathname); }
 
+  // Κύρια εκκίνηση/φρουρός αυθεντικοποίησης & αρχικοποίηση UI
   async function boot() {
-    const meResp = await getMe();
-    const user = meResp && meResp.user ? meResp.user : null;
-    window.__ME__ = user;
+    const meResp = await getMe();                      // Απόπειρα ανάκτησης τωρινού χρήστη
+    const user = meResp && meResp.user ? meResp.user : null; // Κανονικοποίηση
+    window.__ME__ = user;                              // Έκθεση στο global για άλλο κώδικα
 
-    const isDashboard = on(/\/dashboard\//);
-    const isLoginOrRegister = on(/\/(login|register)\.html$/);
-    const isHome = on(/^\/$|\/index\.html$/);
+    // Σημαίες τρέχουσας σελίδας
+    const isDashboard = on(/\/dashboard\//);                  // Σε σελίδα dashboard;
+    const isLoginOrRegister = on(/\/(login|register)\.html$/); // Σε login ή register;
+    const isHome = on(/^\/$|\/index\.html$/);                  // Στην αρχική;
 
-    // ===== Redirect rules =====
-    if (user && isLoginOrRegister) return location.replace(roleDash(user.role));
-    if (!user && isDashboard) return location.replace('/login.html');
+    // ===== Κανόνες ανακατεύθυνσης (redirect rules) =====
+    if (user && isLoginOrRegister) return location.replace(roleDash(user.role)); // Αν έχεις login και είσαι ήδη logged-in, πήγαινε στο dashboard σου
+    if (!user && isDashboard) return location.replace('/login.html');            // Αν δεν είσαι logged-in και είσαι σε dashboard, στείλε σε login
 
-    // ===== Navbar UI (όχι στα dashboards) =====
+    // ===== Navbar UI (μόνο εκτός dashboard) =====
     const nav = Q('.navbar');
     if (nav && !isDashboard) {
-      const loginLinks = QA('a[href="/login.html"], a[href="/register.html"]', nav);
+      const loginLinks = QA('a[href="/login.html"], a[href="/register.html"]', nav); // Links login/register
 
-      // container δεξιά, για να μαζεύουν όλα (chip + buttons)
+      // Δημιουργία/εύρεση δεξιού container στο navbar
       let right = Q('#nav-right', nav);
       if (!right) {
         right = document.createElement('div');
@@ -49,9 +56,10 @@
       }
 
       if (user) {
+        // Αν υπάρχει χρήστης: κρύψε links login/register
         loginLinks.forEach(a => a.style.display = 'none');
 
-        // user chip
+        // Chip χρήστη (αρχικά + κείμενο)
         let chip = Q('#nav-chip', right);
         if (!chip) {
           chip = document.createElement('div');
@@ -67,7 +75,7 @@
           </span>
         `;
 
-        // στην ΑΡΧΙΚΗ μόνο: κουμπί Πίνακας Ελέγχου
+        // Στην ΑΡΧΙΚΗ μόνο: κουμπί "Πίνακας Ελέγχου"
         let dashBtn = Q('#nav-dash', right);
         if (isHome) {
           if (!dashBtn) {
@@ -83,7 +91,7 @@
           dashBtn.style.display = 'none';
         }
 
-        // κουμπί Αποσύνδεση (ghost)
+        // Κουμπί "Αποσύνδεση"
         let lo = Q('#nav-logout', right);
         if (!lo) {
           lo = document.createElement('button');
@@ -96,21 +104,21 @@
         lo.textContent = 'Αποσύνδεση';
 
       } else {
-        // guest
-        loginLinks.forEach(a => a.style.display = '');
-        const right = nav.querySelector('#nav-right'); if (right) right.remove();
-        const toRemove = ['#nav-chip', '#nav-dash', '#nav-logout'];
+        // Κατάσταση επισκέπτη (guest)
+        loginLinks.forEach(a => a.style.display = '');        // Δείξε login/register
+        const right = nav.querySelector('#nav-right'); if (right) right.remove(); // Αφαίρεση container
+        const toRemove = ['#nav-chip', '#nav-dash', '#nav-logout'];               // Καθαρισμός υπολοίπων
         toRemove.forEach(sel => { const el = Q(sel, right); if (el) el.remove(); });
       }
     }
 
-    // ===== badge χρήστη στα dashboards (αν υπάρχει) =====
+    // ===== Badge χρήστη σε dashboards (αν υπάρχει στοιχείο και έχεις user) =====
     if (isDashboard && user) {
       const who = Q('#navUser');
       if (who) who.textContent = user.name || user.username || 'Χρήστης';
     }
 
-    // ===== Home: κρύψε "Σύνδεση" και μην φτιάχνεις sidebar =====
+    // ===== Αρχική: κρύψε "Σύνδεση" όταν είσαι logged-in & καθάρισε sidebar της αρχικής =====
     if (isHome) {
       const loginBtn = Q('.hero-cta a[href="/login.html"]');
       if (loginBtn) loginBtn.style.display = user ? 'none' : '';
@@ -119,25 +127,27 @@
     }
   }
 
+  // Global handler για κλικ σε "Αποσύνδεση" (οπουδήποτε στη σελίδα)
   document.addEventListener('click', async (e) => {
     const lo = e.target.closest('[data-action="logout"]');
     if (lo) {
       e.preventDefault();
 
-      // --- ΑΜΕΣΟ UI cleanup για να μη "χαλάει" μετά το logout
+      // Άμεσο καθάρισμα UI στο navbar ώστε να μην "μένουν" στοιχεία μετά το logout
       const nav = document.querySelector('.navbar');
       if (nav) {
         const right = nav.querySelector('#nav-right'); if (right) right.remove();
         nav.querySelectorAll('a[href="/login.html"], a[href="/register.html"]').forEach(a => a.style.display = '');
-        // καθάρισε τυχόν κουμπί "Πίνακας Ελέγχου"
-        const go = nav.querySelector('#nav-dash'); if (go) go.remove();
+        const go = nav.querySelector('#nav-dash'); if (go) go.remove(); // Καθαρισμός "Πίνακας Ελέγχου"
       }
 
+      // Κλήση logout στο API (αδιαφορία σε σφάλμα) και redirect σε login με query param
       try { await api('/api/auth/logout', { method: 'POST' }); } catch { }
       location.replace(`/login.html?logged_out=${Date.now()}`);
     }
   });
 
-
+  // Εκκίνηση guard/UI
   boot();
 })();
+

@@ -1,65 +1,90 @@
 /* =========================
    Appointments UI (clean)
+   — Στυλ για λίστες ραντεβού, φίλτρα/toolbar,
+     κάρτες, modal φόρμα και βοηθητικά.
    ========================= */
 
 /* ---- Toolbar ---- */
+/* Γραμμή εργαλείων/φίλτρων: αναζήτηση, ημερομηνία, dropdowns, actions */
 .toolbar{
   display:grid;
+  /* 5 στήλες: αναζήτηση (1.2fr), 2 fixed πλάτους (220px), ένα ευέλικτο κενό (1fr) και actions (auto) */
   grid-template-columns: 1.2fr 220px 220px 1fr auto;
   gap:12px; align-items:center;
   margin:8px 0 14px;
 }
+/* Placeholder για να “πάρει” χώρο στη μεσαία περιοχή και να σπρώξει τα actions δεξιά */
 .toolbar .grow{ display:block }
+/* Wrapper input με ομοιόμορφο στυλ σε dark UI */
 .toolbar .input{
   background:transparent; border:1px solid #22345a;
   border-radius:12px; padding:10px 12px; color:#eaf2ff;
 }
+/* Το πραγματικό input μέσα στο wrapper: πλήρες πλάτος, χωρίς native borders */
 .toolbar .input input{ background:transparent; border:0; color:inherit; width:100%; outline:none }
+/* Input με μικρό εικονίδιο αριστερά */
 .toolbar .input--withicon{ position:relative; display:flex; align-items:center; gap:8px }
+/* Διαστάσεις/αδιαφάνεια εικονιδίου εισαγωγής */
 .toolbar .input--withicon .ico{ width:18px; height:18px; opacity:.8; flex:0 0 18px }
+/* Select/ημερομηνία σε dark φόντο (κληρονομεί το χρώμα κειμένου) */
 .toolbar #dateFilter{ color:#eaf2ff; background:transparent; border:0; width:100%; outline:none }
 
+/* Breakpoint: <=980px
+   — Η γραμμή εργαλείων γίνεται 2 στήλες, κρύβεται το “grow”,
+     και τα actions πάνε δεξιά στη 2η σειρά. */
 @media (max-width:980px){
   .toolbar{ grid-template-columns: 1fr 1fr; }
   .toolbar .grow{ display:none }
   .toolbar > *:last-child{ grid-column:1/-1; justify-self:end; }
 }
+/* Breakpoint: <=640px
+   — Κάθε στοιχείο σε δική του γραμμή (1 στήλη),
+     τα actions γεμίζουν οριζόντια. */
 @media (max-width:640px){
   .toolbar{ grid-template-columns: 1fr; }
   .toolbar > *:last-child{ justify-self:stretch; }
 }
 
 /* ---- Buttons ---- */
+/* Πρωτεύον CTA κουμπί με gradient, έντονο βάρος και ήπια κίνηση */
 .btn--primary{
   padding:12px 16px; border-radius:12px;
   background:linear-gradient(180deg,#3f66ff 0%,#2e5bff 70%);
   color:#fff; border:0; font-weight:600; cursor:pointer;
   box-shadow:0 10px 30px rgba(46,91,255,.35), inset 0 1px 0 rgba(255,255,255,.25);
 }
+/* Ελαφρύ hover “σήκωμα” και κορεσμός χρώματος */
 .btn--primary:hover{ transform:translateY(-1px); filter:saturate(1.06) }
+/* Active state: επιστροφή στη θέση του για feedback */
 .btn--primary:active{ transform:translateY(0) }
 
+/* Δευτερεύον (διάφανο) κουμπί με λεπτό περίγραμμα */
 .btn--ghost{
   padding:10px 14px; border-radius:12px;
   background:transparent; border:1px solid rgba(255,255,255,.18);
   color:#cfe2ff; cursor:pointer;
 }
+/* Disabled κατάσταση: χαμηλή αδιαφάνεια και “μη διαθέσιμο” cursor */
 .btn--ghost[disabled]{ opacity:.6; cursor:not-allowed }
 
 /* -----------------------------------
    Cards grid (scoped): 3 → 2 → 1 cols
+   — Πλέγμα καρτών ραντεβού (#apptGrid.cards)
    ----------------------------------- */
 #apptGrid.cards{
   display:grid;
-  grid-template-columns:repeat(3,minmax(0,1fr));
+  grid-template-columns:repeat(3,minmax(0,1fr)); /* 3 στήλες σε desktop */
   gap:18px;
 }
+/* <=1200px: 2 στήλες */
 @media (max-width:1200px){ #apptGrid.cards{ grid-template-columns:repeat(2,minmax(0,1fr)); } }
+/* <=760px: 1 στήλη (κάθετη στοίχιση) */
 @media (max-width:760px){  #apptGrid.cards{ grid-template-columns:1fr; } }
 
 /* ---- Appointment card ---- */
+/* Κάρτα ραντεβού: σκούρο πάνελ, ήπια σκιά και κάθετη διάταξη περιεχομένου */
 .card.appt{
-  background:#0f1b31;               /* ίδιο με Vehicles */
+  background:#0f1b31;               /* Διατηρεί οπτική συνοχή με Vehicles */
   border:1px solid #1b2947;
   border-radius:16px;
   padding:16px;
@@ -67,85 +92,110 @@
   box-shadow:0 6px 24px rgba(0,0,0,.25);
 }
 
-/* Header */
+/* Header περιοχές: στοίχιση, spacing και τίτλος */
 .appt__row{ display:flex; align-items:center; gap:12px }
-.appt__row--between{ justify-content:space-between }
+.appt__row--between{ justify-content:space-between } /* τίτλος αριστερά, actions δεξιά */
 .appt__title{ font-weight:700; font-size:18px; color:#e9f0ff }
 
-/* Meta (ημερομηνία) με ellipsis ώστε να μη “σπάει” */
+/* Meta (ημερομηνία/ώρα/κωδικός) με ellipsis για να μη “σπάει” σε μικρό χώρο */
 .appt__meta{
   color:#9fb1cf; font-size:.95rem;
   white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
   max-width:100%;
 }
 
-/* Actions */
+/* Actions (εικονίδια κουμπιά) */
 .appt__actions{ display:flex; gap:12px; align-items:center }
+/* Τετράγωνο κουμπί με περίγραμμα — ιδανικό για edit, view, cancel, κ.λπ. */
 .appt__btn{
   width:34px; height:34px; border-radius:10px; display:grid; place-items:center;
   background:transparent; color:#cfe2ff; opacity:.9; cursor:pointer;
   border:1px solid #22345a;
 }
+/* Hover: λίγο “σήκωμα” και σκουρότερο φόντο για ανάδραση */
 .appt__btn:hover{ opacity:1; transform:translateY(-1px); background:#13233d }
 
-/* Details grid: 2 cols (wide) → 1 (narrow) */
+/* Details grid: 2 στήλες σε wide, 1 σε narrower */
+/* Χρησιμοποιείται για: Πελάτη, Όχημα, Μηχανικό, Κατάσταση, Κόστος κ.λπ. */
 .appt__grid{
   display:grid; gap:6px 18px; margin-top:6px;
   grid-template-columns:1fr 1fr;
 }
+/* <=900px: μονοστήλη, για κινητά/στενά πλάτη */
 @media (max-width:900px){ .appt__grid{ grid-template-columns:1fr } }
+/* Ετικέτα (αριστερά) και τιμή (δεξιά) σε κάθε πεδίο */
 .appt__label{ color:#9fb1cf; font-size:13px; font-weight:600 }
 .appt__value{ color:#cfe2ff }
 
 /* ---- Badges ---- */
+/* Ενιαίο στυλ πυκνού badge (status/reason) */
 .badge{
   display:inline-flex; align-items:center; white-space:nowrap;
   border-radius:999px; padding:4px 10px; border:1px solid #26406a;
   font-size:12px; font-weight:700; gap:6px;
 }
-.badge--status--CREATED     { background:#1f2a44; color:#d7e6ff }
-.badge--status--IN_PROGRESS { background:#3b2d12; color:#ffd9a3 }
-.badge--status--COMPLETED   { background:#103a2b; color:#bff3cf }
-.badge--status--CANCELED    { background:#3a1620; color:#ffc7d1 }
-.badge--reason--service     { background:#0f2d1c; color:#beeed1 }
-.badge--reason--repair      { background:#401313; color:#ffb3b3 }
+/* Χρωματισμοί κατάστασης ραντεβού (status) */
+.badge--status--CREATED     { background:#1f2a44; color:#d7e6ff }  /* Νεοδημιούργητο */
+.badge--status--IN_PROGRESS { background:#3b2d12; color:#ffd9a3 }  /* Σε εξέλιξη */
+.badge--status--COMPLETED   { background:#103a2b; color:#bff3cf }  /* Ολοκληρωμένο */
+.badge--status--CANCELED    { background:#3a1620; color:#ffc7d1 }  /* Ακυρωμένο */
+/* Χρωματισμοί λόγου ραντεβού (reason) */
+.badge--reason--service     { background:#0f2d1c; color:#beeed1 }  /* Service */
+.badge--reason--repair      { background:#401313; color:#ffb3b3 }  /* Επισκευή */
 
 /* ---- Pager ---- */
+/* Περιτύλιγμα για στοιχεία σελιδοποίησης (αριστερά/δεξιά κουμπιά, status) */
 .pager{ display:flex; align-items:center; justify-content:space-between; margin-top:14px }
 
 /* ---- Modal ---- */
+/* Απενεργοποίηση modal όταν aria-hidden="true" (απλό CSS gate) */
 .modal[aria-hidden="true"]{ display:none }
+/* Overlay πλήρους οθόνης, κεντράρισμα περιεχομένου με grid */
 .modal{
   position:fixed; inset:0; display:grid; place-items:center;
-  background:rgba(0,0,0,.45); z-index:2000;
+  background:rgba(0,0,0,.45); z-index:2000; /* πάνω από το υπόλοιπο UI */
 }
+/* Κάρτα modal: responsive πλάτος, dark πάνελ με έντονη σκιά */
 .modal__card{
   width:min(800px,95vw);
   background:#0c172b; border:1px solid #1b2947; border-radius:16px;
   padding:16px; box-shadow:0 10px 30px rgba(0,0,0,.5);
 }
+/* Κεφαλίδα modal: τίτλος + κουμπί “Χ” δεξιά */
 .modal__head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:10px }
 .modal__head h2{ margin:0 }
+/* Κουμπί κλεισίματος (τετράγωνο) */
 .modal__head .x{
   width:36px; height:36px; border-radius:10px; border:0; display:grid; place-items:center;
   background:#12203a; color:#cfe2ff; cursor:pointer;
 }
+
+/* Grid φόρμας μέσα στο modal: 2 στήλες (desktop) */
 .form-grid{
   display:grid; grid-template-columns:1fr 1fr; gap:12px;
 }
+/* Κάθε “col” φιλοξενεί label+input με κάθετο spacing */
 .form-grid .col{ display:grid; gap:6px }
+/* Labels/Inputs σε dark scheme, ίδιοι τόνοι με την toolbar */
 .form-grid label{ color:#cfe2ff }
 .form-grid .input, .form-grid input, .form-grid select{
   background:transparent; border:1px solid #22345a; border-radius:12px; padding:10px 12px; color:#e8f0ff;
 }
+/* Βοηθητικό κείμενο (hint) κάτω από τα πεδία */
 .form-grid .hint{ color:#9fb1cf }
+/* Περιοχή actions (π.χ. Cancel/Save): πιάνει όλο το πλάτος και πάει δεξιά */
 .form-grid .actions{
   grid-column:1/-1; display:flex; justify-content:flex-end; gap:8px; margin-top:6px;
 }
+/* <=760px: η φόρμα γίνεται μονοστήλη */
 @media (max-width:760px){ .form-grid{ grid-template-columns:1fr } }
 
 /* ---- Minor helpers ---- */
+/* Κεφαλίδα σελίδας: τίτλος αριστερά, δεξιά μπορεί να μπει ένα action ή μετρητής */
 .page-head{ display:flex; align-items:flex-end; justify-content:space-between; gap:16px; margin:8px 0 14px }
+/* Μεγάλος τίτλος σελίδας χωρίς extra spacing */
 .page-head h1{ font-size:42px; line-height:1; margin:0 }
+/* Υπότιτλος με ήπιο χρώμα */
 .page-head .subtitle{ color:#aeb8cc; margin:6px 0 0 }
+/* Ήπιο κείμενο (π.χ. βοηθητικές ετικέτες) */
 .muted{ color:#9fb1cf }

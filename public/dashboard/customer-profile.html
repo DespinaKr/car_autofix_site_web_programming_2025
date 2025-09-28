@@ -1,18 +1,27 @@
 <!doctype html>
 <html lang="el">
 <head>
+  <!-- Βασικά meta για UTF-8 και responsive layout -->
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Προφίλ · Πελάτης · AutoFix</title>
 
+  <!-- Βασικά styles της εφαρμογής + styles περιοχής dashboard -->
   <link rel="stylesheet" href="/css/style.css"/>
   <link rel="stylesheet" href="/css/dash.css"/>
 
+  <!--
+    JS (defer: φορτώνονται μετά το parsing του HTML, διατηρούν τη σειρά):
+    - api.js: κοινές κλήσεις API / helpers
+    - auth-guard.js: έλεγχος session/ρόλου και redirect αν δεν επιτρέπεται
+    - profile.me.js: controller της σελίδας (fetch προφίλ, inline edit, αλλαγή κωδικού)
+  -->
   <script defer src="/js/api.js"></script>
   <script defer src="/js/auth-guard.js"></script>
   <script defer src="/js/profile.me.js"></script>
 
   <style>
+    /* Τοπικά styles μόνο για το προφίλ (avatar, grid, inputs) */
     .avatar-circle{width:84px;height:84px;border-radius:50%;display:grid;place-items:center;
       font:700 28px/1 Inter,system-ui;background:linear-gradient(135deg,#2563eb33,#1e3a8a33);
       border:1px solid rgba(255,255,255,.2);color:#eaf2ff}
@@ -27,36 +36,47 @@
 </head>
 
 <body>
-  <!-- NAVBAR -->
+  <!-- NAVBAR: brand οδηγεί στο dashboard πελάτη.
+       Το #navUser θα συμπληρωθεί από JS με τα στοιχεία του session. -->
   <div class="navbar">
     <a class="brand" href="/dashboard/customer.html">
       <img class="brand-logo" src="/img/logo.png" alt="AutoFix logo">
       <span>Μηχανουργείο AutoFix</span>
     </a>
     <div style="display:flex;gap:8px;align-items:center">
+      <!-- Text-only badge για αποφυγή XSS: στο JS χρησιμοποίησε textContent αντί για innerHTML -->
       <span class="badge" id="navUser">—</span>
+      <!-- Το logout χειρίζεται κοινός listener (data-action="logout") -->
       <button class="btn ghost" data-action="logout">Αποσύνδεση</button>
     </div>
   </div>
 
   <main class="main">
+    <!-- Τίτλοι σελίδας -->
     <h1 class="page-title">Προφίλ</h1>
     <div class="subtitle">Ενημέρωσε τα προσωπικά σου στοιχεία και τον κωδικό σου</div>
 
-    <!-- Κάρτα Προφίλ -->
+    <!-- Κάρτα Προφίλ: avatar, όνομα, κατάσταση λογαριασμού, actions -->
     <section class="card">
       <div class="profile-header">
+        <!-- Αρχικά ονόματος (fallback). Το JS μπορεί να ενημερώνει το περιεχόμενο (π.χ. “JD”). -->
         <div id="profileAvatar" class="avatar-circle">CU</div>
         <div>
+          <!-- data-field hooks: το JS γεμίζει τιμές με textContent -->
           <h2 data-field="full_name">Customer</h2>
+          <!-- Κατάσταση (ενεργός/ανενεργός). Αν γεμίσει δυναμικά, απόφυγε raw HTML. -->
           <div id="profileStatus"><span class="badge green">Ενεργός</span></div>
         </div>
         <div class="profile-actions">
+          <!-- Επιστροφή στο dashboard πελάτη -->
           <a class="btn ghost" href="/dashboard/customer.html">← Πίσω στον πίνακα</a>
+          <!-- Ενεργοποίηση λειτουργίας επεξεργασίας (inline edit) από το profile.me.js -->
           <button class="btn" id="btnProfileEdit">Επεξεργασία</button>
         </div>
       </div>
 
+      <!-- Πλέγμα στοιχείων προφίλ: τα div[data-field] είναι “read-only view”.
+           Το JS μπορεί να τα μετατρέπει προσωρινά σε inputs κατά την επεξεργασία. -->
       <div class="details-grid" style="margin-top:14px">
         <div class="field">
           <b>Όνομα</b>
@@ -88,7 +108,11 @@
       </div>
     </section>
 
-    <!-- Ασφάλεια / Αλλαγή Κωδικού -->
+    <!-- Ενότητα Ασφάλειας: φόρμα αλλαγής κωδικού (αρχικά κρυφή).
+         Το JS θα κάνει:
+         - preventDefault, basic client validation
+         - POST στο endpoint αλλαγής κωδικού
+         - feedback μέσω .toast -->
     <section class="card">
       <div class="card-head"><h3>Ασφάλεια</h3></div>
       <form id="pwdForm" class="hidden" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
@@ -98,6 +122,7 @@
         </div>
         <div class="field">
           <b>Νέος κωδικός</b>
+          <!-- Προαιρετικά: minlength=8, autocomplete="new-password" -->
           <input class="input" type="password" name="next" placeholder="τουλάχιστον 8 χαρακτήρες"/>
         </div>
         <div class="field">
@@ -105,11 +130,13 @@
           <input class="input" type="password" name="confirm" placeholder="ξανά"/>
         </div>
         <div style="grid-column: 1 / -1; text-align:right;">
+          <!-- Υποβολή φόρμας αλλαγής κωδικού -->
           <button class="btn" type="submit">Αλλαγή κωδικού</button>
         </div>
       </form>
     </section>
 
+    <!-- Toast: μικρά status/error μηνύματα. Το JS εναλλάσσει .hidden και θέτει κείμενο. -->
     <div class="toast hidden"></div>
   </main>
 </body>

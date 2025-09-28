@@ -1,66 +1,114 @@
 <!doctype html>
+<!-- DOCTYPE: Δηλώνει HTML5, απαραίτητο για ορθό rendering/compatibility -->
 <html lang="el">
+  <!-- lang="el": Ορίζει γλώσσα για screen readers/SEO -->
 
 <head>
   <meta charset="utf-8" />
+  <!-- UTF-8: Υποστήριξη ελληνικών χαρακτήρων -->
+
   <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <!-- Responsive: Κλίμακα για κινητά/ταμπλέτες -->
+
   <title>Πίνακας Ελέγχου · Πελάτης · AutoFix</title>
+  <!-- Τίτλος σελίδας: εμφανίζεται στο tab/ιστορικό/SEO -->
 
   <link rel="stylesheet" href="/css/style.css" />
   <link rel="stylesheet" href="/css/dash.css" />
+  <!-- CSS: Γενικό style + ειδικά styles dashboard (σειρά: το δεύτερο μπορεί να υπερκαλύψει κανόνες του πρώτου) -->
 
   <script defer src="/js/api.js"></script>
+  <!-- api.js: Προσδοκάται να περιέχει κλήσεις προς backend (fetch/AJAX) και helpers -->
+
   <script defer src="/js/auth-guard.js"></script>
+  <!-- auth-guard.js: Έλεγχος αυθεντικοποίησης (π.χ. redirect αν δεν υπάρχει session/JWT) -->
+
   <script defer src="/js/customer.js"></script>
+  <!-- customer.js: Δεσίματα UI (listeners), φόρτωση ραντεβού/οχημάτων, άνοιγμα/κλείσιμο modals, submit forms -->
+  <!-- defer: Τα scripts εκτελούνται μετά το parsing του DOM χωρίς να μπλοκάρουν το rendering -->
+  <!-- Σημείωση ασφάλειας (server-side ρύθμιση): Συνίσταται CSP header, HTTPOnly/SameSite cookies, κ.λπ. -->
 </head>
 
 <body>
+  <!-- NAVBAR: Επικεφαλίδα πλοήγησης του πελάτη -->
   <div class="navbar">
     <a class="brand" href="/" aria-label="Αρχική σελίδα">
+      <!-- aria-label: Βοηθά τους screen readers -->
       <img class="brand-logo" src="/img/logo.png" alt="AutoFix logo">
+      <!-- alt: Περιγραφή εικόνας για προσβασιμότητα -->
       <span>Μηχανουργείο AutoFix</span>
     </a>
 
     <div style="display:flex; gap:8px; align-items:center">
       <a class="btn ghost" href="/dashboard/customer-profile.html">Προφίλ</a>
+      <!-- Κουμπί μετάβασης στο προφίλ χρήστη -->
+
       <span class="badge" id="navUser">—</span>
+      <!-- navUser: Θα ενημερωθεί δυναμικά (π.χ. με το όνομα/email) από customer.js -->
+
       <button class="btn ghost" data-action="logout">Αποσύνδεση</button>
+      <!-- data-action="logout": Το customer.js (ή auth-guard.js) θα κάνει bind handler για logout -->
     </div>
   </div>
 
-
+  <!-- Κύριο περιεχόμενο -->
   <main class="container">
-    <!-- Ραντεβού -->
+    <!-- Ενότητα ΡΑΝΤΕΒΟΥ -->
     <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
       <h2>Τα Ραντεβού μου</h2>
       <button class="btn" id="btnNewAppt">+ Νέο Ραντεβού</button>
+      <!-- btnNewAppt: Άνοιγμα modal "Νέο Ραντεβού" -->
     </div>
-    <div id="appts"></div>
 
-    <!-- Οχήματα -->
+    <div id="appts"></div>
+    <!-- appts: Placeholder όπου θα γίνει render δυναμικά η λίστα ραντεβού (κάρτες/πίνακας) -->
+
+    <!-- Ενότητα ΟΧΗΜΑΤΑ -->
     <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:20px">
       <h2>Τα Οχήματά μου</h2>
       <button class="btn" id="btnNewVehicle">+ Προσθήκη Οχήματος</button>
+      <!-- btnNewVehicle: Άνοιγμα modal "Προσθήκη Οχήματος" -->
     </div>
+
     <div id="vehicles"></div>
+    <!-- vehicles: Placeholder όπου θα γίνει render δυναμικά η λίστα οχημάτων -->
   </main>
 
-  <!-- Modal: Νέο Ραντεβού -->
+  <!-- MODAL: ΝΕΟ ΡΑΝΤΕΒΟΥ -->
+  <!-- Η λογική ανοίγματος/κλεισίματος αναλαμβάνεται από JS (π.χ. toggle [aria-hidden]) -->
   <div class="modal" id="mAppt" aria-hidden="true">
+    <!-- aria-hidden="true": Η modal ξεκινά κρυφή για screen readers/εστίαση -->
+
     <div class="modal__dialog card" role="dialog" aria-modal="true" aria-labelledby="mApptTitle">
+      <!-- role="dialog" + aria-modal: Ορίζει semantics διαλόγου για προσβασιμότητα -->
+      <!-- aria-labelledby: Συσχέτιση τίτλου με το dialog -->
+
       <div class="card-head" style="display:flex;justify-content:space-between;align-items:center">
         <h3 id="mApptTitle">Νέο Ραντεβού</h3>
+
         <button class="btn ghost" data-close="#mAppt">✕</button>
+        <!-- data-close: Το JS θα βρει το target modal και θα το κλείσει -->
       </div>
+
       <form id="formAppt" class="grid cols-2" style="gap:12px">
+        <!-- formAppt: Υποβολή νέου ραντεβού (JS: preventDefault, validation, API call) -->
+        <!-- grid cols-2: 2 στήλες σε desktop, κρατώντας απλή διάταξη -->
+
         <label class="field col-span-2">
           <span class="label">Όχημα</span>
           <select class="input" id="appt_vehicle" required></select>
+          <!-- appt_vehicle: Θα γεμίσει δυναμικά με τα οχήματα του χρήστη (id/label) -->
         </label>
 
         <label class="field">
           <span class="label">Ημ/νία & Ώρα</span>
           <input class="input" type="datetime-local" id="appt_dt" required>
+          <!-- appt_dt: Είσοδος ημερομηνίας/ώρας. Το UI επιτρέπει οποιαδήποτε τιμή, 
+               αλλά η επιχειρησιακή λογική (JS/server) ΠΡΕΠΕΙ να ελέγχει:
+               - Ωράριο 08:00–16:00
+               - Διάρκεια slot 2 ώρες
+               - Τελευταίο ξεκίνημα 14:00
+               - Συγκρούσεις με υπάρχοντα ραντεβού -->
           <small class="muted">Ωράριο 08:00–16:00 (slot 2 ώρες, τελευταίο ξεκίνημα 14:00)</small>
         </label>
 
@@ -70,37 +118,52 @@
             <option value="service">Σέρβις</option>
             <option value="repair">Επιδιόρθωση</option>
           </select>
+          <!-- appt_reason: Επιλογή τύπου ραντεβού. Το JS μπορεί να δείχνει/κρύβει το πεδίο "Πρόβλημα" -->
         </label>
 
         <label class="field col-span-2" id="grp_problem">
           <span class="label">Πρόβλημα (μόνο για επιδιόρθωση)</span>
           <textarea class="input" id="appt_problem" rows="3" placeholder="Σύντομη περιγραφή"></textarea>
+          <!-- grp_problem: Θα είναι ενεργό/υποχρεωτικό μόνο όταν reason = 'repair' (χειρισμός στο JS) -->
         </label>
 
         <div class="col-span-2" style="display:flex;gap:8px;justify-content:flex-end">
           <button type="button" class="btn ghost" data-close="#mAppt">Άκυρο</button>
+          <!-- Άκυρο: Κλείνει το modal χωρίς submit -->
+
           <button class="btn" id="btnApptSave">Αποθήκευση</button>
+          <!-- btnApptSave: Το JS θα αναλάβει το submit (π.χ. form submit handler ή click listener) -->
         </div>
       </form>
     </div>
   </div>
 
-  <!-- Modal: Προσθήκη Οχήματος (μίνιμαλ) -->
+  <!-- MODAL: ΠΡΟΣΘΗΚΗ ΟΧΗΜΑΤΟΣ (ΜΙΝΙΜΑΛ) -->
   <div class="modal" id="mVehicle" aria-hidden="true">
+    <!-- Όμοια λογική εμφάνισης/απόκρυψης με το mAppt -->
+
     <div class="modal__dialog card" role="dialog" aria-modal="true" aria-labelledby="mVehTitle">
       <div class="card-head" style="display:flex;justify-content:space-between;align-items:center">
         <h3 id="mVehTitle">Προσθήκη Οχήματος</h3>
         <button class="btn ghost" data-close="#mVehicle">✕</button>
+        <!-- Κλείσιμο modal -->
       </div>
+
       <form id="formVehicle" class="grid cols-2" style="gap:12px">
+        <!-- formVehicle: Δημιουργία οχήματος. Συνίσταται server-side validation (π.χ. μοναδικότητα serial). -->
+
         <label class="field">
           <span class="label">Μάρκα</span>
           <input class="input" id="veh_brand" required>
+          <!-- Παράδειγμα: 'Toyota' -->
         </label>
+
         <label class="field">
           <span class="label">Μοντέλο</span>
           <input class="input" id="veh_model" required>
+          <!-- Παράδειγμα: 'Corolla' -->
         </label>
+
         <label class="field">
           <span class="label">Τύπος</span>
           <select class="input" id="veh_type" required>
@@ -108,7 +171,9 @@
             <option value="truck">truck</option>
             <option value="bus">bus</option>
           </select>
+          <!-- Τύπος οχήματος: Θα μπορούσε να συνδεθεί με business rules (π.χ. όρια βάρους/θέσεων) -->
         </label>
+
         <label class="field">
           <span class="label">Είδος κίνησης</span>
           <select class="input" id="veh_engine" required>
@@ -118,31 +183,44 @@
             <option value="electric">electric</option>
             <option value="lpg">lpg</option>
           </select>
+          <!-- Καύσιμο/κινητήρας: Μπορεί να επηρεάζει τις εργασίες σέρβις -->
         </label>
+
         <label class="field">
           <span class="label">Θύρες</span>
           <input class="input" id="veh_doors" type="number" min="2" max="6" required>
+          <!-- Ακέραιος 2–6. Το min/max εφαρμόζεται client-side, ο server πρέπει να το επιβεβαιώνει -->
         </label>
+
         <label class="field">
           <span class="label">Ρόδες</span>
           <input class="input" id="veh_wheels" type="number" min="2" max="8" required>
+          <!-- Ακέραιος 2–8. Π.χ. μοτοσυκλέτα/αυτοκίνητο/φορτηγό -->
         </label>
+
         <label class="field">
           <span class="label">Σειριακός αριθμός</span>
           <input class="input" id="veh_serial" required>
+          <!-- Μοναδικότητα: Συνίσταται έλεγχος στο backend (π.χ. VIN) -->
         </label>
+
         <label class="field">
           <span class="label">Έτος κτήσης</span>
           <input class="input" id="veh_year" type="number" min="1990" max="2099" required>
+          <!-- Έτος 1990–2099. Ο server μπορεί να ελέγξει και το εύρος/λογική ως προς την ημερομηνία παραγωγής -->
         </label>
-        <!-- Ημ/νία Κατασκευής -->
+
+        <!-- Ημ/νία Κατασκευής (ξεχωριστή ετικέτα + input, χωρίς wrapper .field για να μείνει η υπάρχουσα διάταξη) -->
         <label for="veh_prod_date" class="label">Ημ/νία κατασκευής</label>
         <input id="veh_prod_date" type="date" class="input" required>
-
+        <!-- Αν το UX απαιτεί validation (π.χ. όχι μελλοντική ημερομηνία), αυτό γίνεται στο JS/server -->
 
         <div class="col-span-2" style="display:flex;gap:8px;justify-content:flex-end">
           <button type="button" class="btn ghost" data-close="#mVehicle">Άκυρο</button>
+          <!-- Άκυρο: Κλείνει το modal χωρίς αλλαγές -->
+
           <button class="btn" id="btnVehSave">Αποθήκευση</button>
+          <!-- btnVehSave: Submit handler στο JS (π.χ. form submit -> API -> ενημέρωση λίστας 'vehicles') -->
         </div>
       </form>
     </div>

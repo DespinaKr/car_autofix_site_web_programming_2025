@@ -1,0 +1,5 @@
+{
+    "rest-client.defaultHeaders": {
+        "User-Agent": "vscode-restclient"
+    }
+}

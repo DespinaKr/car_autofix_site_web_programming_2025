@@ -2,21 +2,27 @@
 (function () {
     'use strict';
 
+    // Συντομεύσεις για DOM επιλογές
     const $ = (s, r = document) => r.querySelector(s);
     const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 
     // ---------- helpers ----------
 
+    // Επιστρέφει badge HTML για ενεργό/ανενεργό (δέχεται boolean ή string με "ACT")
     const statusBadge = (activeOrStatus) => {
         const on = typeof activeOrStatus === 'string'
             ? activeOrStatus.toUpperCase().includes('ACT')
             : !!activeOrStatus;
         return `<span class="badge ${on ? 'green' : 'orange'}">${on ? 'Ενεργός' : 'Ανενεργός'}</span>`;
     };
+
+    // Παράγει αρχικά ονόματος από πλήρες ονοματεπώνυμο
     const initials = (name) => {
         const p = String(name || '').trim().split(/\s+/).filter(Boolean);
         return ((p[0]?.[0] || '') + (p[1]?.[0] || '')).toUpperCase() || 'CU';
     };
+
+    // Απλό toast: αν δεν υπάρχει .toast στο DOM, κάνει alert
     function toast(msg) {
         const t = $('.toast');
         if (!t) { alert(msg); return; }
@@ -25,6 +31,7 @@
     }
 
     // ---------- normalize ----------
+    // Κανονικοποίηση αντικειμένου χρήστη σε ομοιόμορφα κλειδιά που περιμένει το UI
     function normUser(u) {
         if (!u) return null;
         const first = u.first_name || u.firstName || '';
@@ -43,7 +50,7 @@
             id_card: u.id_card || u.id_number || '',
             afm: u.afm || u.vat || u.vat_number || '',
             address: u.address || u.addr || '',
-            // phone: u.phone || u.phone_number || u.tel || '', // αν θες να το στηρίξεις backend-ικά
+            // phone: u.phone || u.phone_number || u.tel || '', // αν υποστηριχθεί backend-ικά
         };
     }
 
@@ -53,31 +60,33 @@
     const statusEl = $('#profileStatus');
     const pwdForm = $('#pwdForm');
 
-    // ΠΕΔΙΑ που θα γίνουν render στο UI (πρέπει να υπάρχουν ως data-field στο HTML)
+    // Λίστα πεδίων που αποδίδονται στο UI (πρέπει να υπάρχουν ως data-field στο HTML)
     const FIELD_KEYS = [
         'first_name', 'last_name', 'email', 'username',
         'id_card', 'afm', 'address',
         'full_name', 'status'
     ];
 
+    // Κατάσταση module
     const state = { me: null, data: null, editing: false };
 
     // ---------- boot ----------
+    // Εκκίνηση μετά το DOMContentLoaded
     window.addEventListener('DOMContentLoaded', init);
 
     async function init() {
         try {
-            // auth
+            // Έλεγχος αυθεντικοποίησης: επιτρέπεται μόνο για role 'customer'
             const auth = await api('/api/auth/me');
             const me = auth?.user || auth;
             if (!me || me.role !== 'customer') { location.href = '/login.html'; return; }
             state.me = me;
 
-            // navbar name
+            // Ενημέρωση εμφανιζόμενου ονόματος στο navbar
             const fullName = [me.first_name, me.last_name].filter(Boolean).join(' ') || me.username || 'Πελάτης';
             $('#navUser') && ($('#navUser').textContent = fullName);
 
-            // logout
+            // Logout handler
             document.addEventListener('click', async (e) => {
                 const b = e.target.closest('[data-action="logout"]');
                 if (!b) return;
@@ -85,14 +94,14 @@
                 location.href = '/login.html';
             });
 
-            // profile data
+            // Απόπειρα ανάκτησης πλήρους προφίλ (fallback στο /api/auth/me αν αποτύχει)
             let raw = null;
             try {
                 raw = await api('/api/users/me');
             } catch (_) {
-                // αγνόησέ το—αν δεν απαντήσει, θα καλύψουμε από /api/auth/me
+                // αν αποτύχει, απλώς συνεχίζουμε με τα δεδομένα από /api/auth/me
             }
-            const merged = { ...me, ...(raw || {}) };
+            const merged = { ...me, ...(raw || {}) }; // προτεραιότητα σε πεδία από /users/me
             state.data = normUser(merged);
             render(state.data);
         } catch (err) {
@@ -102,14 +111,17 @@
     }
 
     // ---------- render ----------
+    // Θέτει τιμή σε όλα τα στοιχεία με συγκεκριμένο data-field
     function setField(key, val) {
         $$(`[data-field="${key}"]`).forEach(el => {
             if (key === 'status') { el.innerHTML = statusBadge(val); return; }
             const txt = (val == null || String(val).trim() === '') ? '—' : String(val);
             el.textContent = txt;
-            el.dataset.original = txt;
+            el.dataset.original = txt; // αποθήκευση αρχικής τιμής για diff στο save
         });
     }
+
+    // Απόδοση όλων των πεδίων της καρτέλας προφίλ
     function render(d) {
         if (avatar) avatar.textContent = initials(d.full_name);
         if (statusEl) statusEl.innerHTML = statusBadge(d.status);
@@ -117,6 +129,7 @@
     }
 
     // ---------- edit / save ----------
+    // Είσοδος σε κατάσταση επεξεργασίας: κουμπιά, inputs, φόρμα κωδικού
     function enterEdit() {
         state.editing = true;
         if (btnEdit) { btnEdit.textContent = 'Αποθήκευση'; btnEdit.classList.remove('ghost'); }
@@ -129,6 +142,7 @@
             btnEdit?.parentNode?.insertBefore(cancel, btnEdit.nextSibling);
             cancel.addEventListener('click', exitEdit);
         }
+        // Μετατροπή εμφανίσιμων πεδίων σε input (μόνο για data-editable="true")
         $$('[data-field][data-editable="true"]').forEach(el => {
             if (el.querySelector('input')) return;
             const value = (el.textContent || '').trim();
@@ -138,9 +152,10 @@
             input.dataset.key = el.dataset.field;
             el.innerHTML = ''; el.appendChild(input);
         });
-        pwdForm?.classList.remove('hidden');
+        pwdForm?.classList.remove('hidden'); // εμφάνιση φόρμας αλλαγής κωδικού
     }
 
+    // Έξοδος από επεξεργασία: επαναφορά κειμένων, απόκρυψη φόρμας κωδικού
     function exitEdit() {
         state.editing = false;
         if (btnEdit) btnEdit.textContent = 'Επεξεργασία';
@@ -152,6 +167,7 @@
         pwdForm?.classList.add('hidden');
     }
 
+    // Συλλογή αλλαγών (diff) από editable πεδία -> αντικείμενο patch
     function collectPatch() {
         const patch = {};
         $$('[data-field][data-editable="true"]').forEach(el => {
@@ -162,11 +178,11 @@
 
             if (val !== origClean) {
                 if (k === 'afm') {
-                    patch.afm = val;              // backend σου δέχεται afm
-                    // patch.vat_number = val;     // μόνο αν θες alias
+                    patch.afm = val;              // το backend δέχεται afm
+                    // patch.vat_number = val;     // alias, αν χρειαστεί
                 } else if (k === 'id_card') {
                     patch.id_card = val;
-                    // patch.id_number = val;      // alias
+                    // patch.id_number = val;      // alias, αν χρειαστεί
                 } else {
                     patch[k] = val;
                 }
@@ -175,10 +191,12 @@
         return patch;
     }
 
+    // Αποθήκευση αλλαγών προφίλ (PATCH /api/users/me)
     async function save() {
         const patch = collectPatch();
         if (Object.keys(patch).length === 0) { exitEdit(); return; }
 
+        // Απλός έλεγχος email client-side
         if (patch.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(patch.email)) {
             alert('Μη έγκυρο email.'); return;
         }
@@ -196,6 +214,7 @@
     }
 
     // ---------- change password ----------
+    // Υποβολή φόρμας αλλαγής κωδικού: βασικοί έλεγχοι και κλήση API
     pwdForm?.addEventListener('submit', async (e) => {
         e.preventDefault();
         const fd = new FormData(pwdForm);
@@ -217,5 +236,6 @@
         }
     });
 
+    // Εναλλαγή μεταξύ "Επεξεργασία" και "Αποθήκευση"
     btnEdit?.addEventListener('click', () => state.editing ? save() : enterEdit());
 })();

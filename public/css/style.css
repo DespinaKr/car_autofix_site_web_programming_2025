@@ -1,40 +1,56 @@
+/* ================================
+   Design tokens (χρώματα/σκιές/ακτίνες)
+   — Ενιαίο σημείο παραμετροποίησης θέματος
+=================================== */
 :root{
-  --bg:#0e1624; --panel:#111c2e; --primary:#2e5bff; --text:#e6edf3; --muted:#9aa4b2; --accent:#1f3bb3; --success:#35c759; --warn:#ff9f0a; --danger:#ff453a;
-  --shadow:0 10px 30px rgba(0,0,0,.35);
-  --radius:18px;
+  --bg:#0e1624;           /* Βασικό φόντο (night blue) */
+  --panel:#111c2e;        /* Κάρτες/πάνελ */
+  --primary:#2e5bff;      /* Brand primary (κουμπιά/links) */
+  --text:#e6edf3;         /* Κύριο κείμενο σε dark φόντο */
+  --muted:#9aa4b2;        /* Δευτερεύον κείμενο/λεζάντες */
+  --accent:#1f3bb3;       /* Σκοτεινό τονικό για hover/σκιές */
+  --success:#35c759;      /* Επιτυχία */
+  --warn:#ff9f0a;         /* Προειδοποίηση */
+  --danger:#ff453a;       /* Σφάλμα/επικίνδυνο */
+  --shadow:0 10px 30px rgba(0,0,0,.35); /* Γενική σκιά UI */
+  --radius:18px;          /* Στρογγύλεμα καρτών/στοιχείων */
 }
 
 /* ===== Base ===== */
-*{ box-sizing:border-box }
+/* Καθολικές βάσεις, τυπογραφία και κοντέινερ διάταξης */
+*{ box-sizing:border-box } /* Ελεγχόμενη διάταξη πλάτους/περιθωρίων */
 body{
   margin:0;
   font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
   background:var(--bg); color:var(--text);
 }
-a{ color:var(--text); text-decoration:none }
-.container{ max-width:1200px; margin:0 auto; padding:20px }
+a{ color:var(--text); text-decoration:none }      /* Λευκοί σύνδεσμοι σε dark φόντο */
+.container{ max-width:1200px; margin:0 auto; padding:20px } /* Κεντρικό περιεχόμενο */
 
 /* ===== Navbar & Brand ===== */
+/* Κολλώδη μπάρα πλοήγησης με λεπτή γραμμή διαχωρισμού */
 .navbar{
   height:64px; display:flex; align-items:center; justify-content:space-between;
   padding:0 16px; background:#0b1422; border-bottom:1px solid #0f1b2f;
-  position:sticky; top:0; z-index:10;
+  position:sticky; top:0; z-index:10; /* Μένει στην κορυφή */
 }
 .navbar .brand{ display:flex; align-items:center; gap:12px; font-weight:700; color:inherit; text-decoration:none }
 .brand-logo{
   height:56px; width:auto; object-fit:contain; border-radius:0; box-shadow:none; display:block;
 }
-.badge{ background:#1d2a44; border-radius:99px; padding:6px 10px; font-size:12px; color:#c9d3e5 }
+.badge{ background:#1d2a44; border-radius:99px; padding:6px 10px; font-size:12px; color:#c9d3e5 } /* Μικρό label */
 
 /* ===== Buttons ===== */
+/* Βασικό πρωτεύον κουμπί + παραλλαγές */
 .btn{
   padding:12px 18px; border-radius:12px; background:var(--primary);
   border:none; color:#fff; font-weight:600; box-shadow:var(--shadow); cursor:pointer;
 }
-.btn.secondary{ background:#1f2a44 }
-.btn.ghost{ background:transparent; border:1px solid #2a3c67 }
+.btn.secondary{ background:#1f2a44 }      /* Δευτερεύον, low-contrast */
+.btn.ghost{ background:transparent; border:1px solid #2a3c67 } /* Διαφανές περίγραμμα */
 
 /* ===== Hero (gradient base, χρησιμοποιείται σε άλλες σελίδες) ===== */
+/* Block με κλίση για έντονο hero section */
 .hero{
   background:linear-gradient(135deg,#2e5bff 0%,#1847e0 60%,#15397d 100%);
   padding:70px 30px; border-radius:24px; box-shadow:var(--shadow); margin:24px 0; text-align:center;
@@ -43,12 +59,13 @@ a{ color:var(--text); text-decoration:none }
 .hero p{ color:#e9f0ff }
 
 /* ===== Hero με εικόνα (home) ===== */
+/* Overlay εικόνας + soft filters για καλύτερη αντίθεση κειμένου */
 .hero.with-bg{
   position:relative; border-radius:18px; overflow:hidden; background:none !important;
 }
 .hero.with-bg::before{
   content:""; position:absolute; inset:0; z-index:-1;
-  background:var(--hero) center/cover no-repeat;
+  background:var(--hero) center/cover no-repeat; /* Αναμένει --hero:url(...) */
   /* ελαφρώς πιο «καθαρή» αντίθεση */
   filter:brightness(.96) contrast(1.06) saturate(1.05);
 }
@@ -58,12 +75,14 @@ a{ color:var(--text); text-decoration:none }
 }
 
 /* ===== Grid (single source of truth) ===== */
+/* Ενιαίο grid σύστημα με auto-fit στήλες */
 .grid{ display:grid; gap:22px; }
 .grid.cols-4{ grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); }
 .grid.cols-3{ grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); }
 .grid .card{ width:auto; }
 
 /* ===== Cards / Footer ===== */
+/* Κάρτες με λεπτό περίγραμμα και σκιές */
 .card{ background:var(--panel); border:1px solid #1b2947; border-radius:var(--radius); padding:18px; box-shadow:var(--shadow) }
 .card h3{ margin:0 0 8px 0 }
 .footer{ border-top:1px solid rgba(255,255,255,.08); margin-top:40px; color:var(--muted); padding:30px 0 }
@@ -71,10 +90,11 @@ a{ color:var(--text); text-decoration:none }
 .footer .small{ opacity:.9 }
 
 /* ===== Forms / Tables ===== */
+/* Σκούρα inputs με φωτεινά focus, και “spaced rows” στους πίνακες */
 .input, select{ width:100%; padding:12px; border-radius:12px; border:1px solid #2a3c67; background:#0e1a30; color:#e6edf3 }
 .form-row{ display:grid; gap:12px; grid-template-columns:repeat(2,1fr) }
 label{ font-size:13px; color:#bfcae0 }
-.table{ width:100%; border-collapse:separate; border-spacing:0 10px }
+.table{ width:100%; border-collapse:separate; border-spacing:0 10px } /* “Floating rows” */
 .table th{ color:#9fb1d7; text-align:left; padding:8px }
 .table td{ background:var(--panel); border:1px solid #1b2947; border-left:none; border-right:none; padding:12px }
 .badge.status{ padding:4px 10px; border-radius:999px; font-size:12px }
@@ -84,6 +104,7 @@ label{ font-size:13px; color:#bfcae0 }
 .badge.red{ background:#401313; color:#ffb3b3 }
 
 /* ===== Sidebar ===== */
+/* Σταθερό sidebar σε desktop, off-canvas σε mobile (βλ. media queries) */
 .sidebar{
   position:fixed; left:0; top:64px; bottom:0; width:220px;
   background:#0b1422; border-right:1px solid #0f1b2f; padding:12px; overflow:auto;
@@ -93,11 +114,12 @@ label{ font-size:13px; color:#bfcae0 }
 .sidebar a.active, .sidebar a:hover{ background:#16233e }
 
 /* ===== Misc ===== */
-.hidden{ display:none }
+.hidden{ display:none } /* Helper κλάση για conditional εμφάνιση */
 .toast{ position:fixed; right:20px; bottom:20px; background:#0d1b33; padding:14px 18px; border-radius:12px; border:1px solid #243458; box-shadow:var(--shadow) }
 .small{ font-size:12px; color:var(--muted) }
 
 /* ===== Services (single definitions) ===== */
+/* Κάρτες υπηρεσιών με ελαφρύ hover elevation */
 .service-card{ position:relative; padding:16px; border-radius:14px; min-height:190px; transition:transform .2s ease, box-shadow .2s ease; }
 .service-card:hover{ transform:translateY(-6px); box-shadow:0 14px 36px rgba(0,0,0,.28); }
 .service-card .service-thumb{
@@ -115,6 +137,7 @@ label{ font-size:13px; color:#bfcae0 }
 .contact-items .item{ text-align:center }
 
 /* ===== Accessibility ===== */
+/* Χρώμα visited, υπογράμμιση hover, focus rings και helper για screen readers */
 a:visited{ color:#9aa7ff }
 a:hover{ text-decoration:underline }
 :focus-visible{ outline:2px solid var(--primary); outline-offset:2px }
@@ -126,11 +149,13 @@ a:hover{ text-decoration:underline }
 .input.error{ border-color:#ff453a; background:#201318 }
 
 /* ===== Tabs (register) ===== */
+/* Στυλ για tabs εγγραφής (ARIA-ready από το markup) */
 .tabs{ display:flex; gap:8px; background:#0f1b2f; border:1px solid #1b2c4f; border-radius:12px; padding:6px }
 .tab{ flex:1; padding:10px 12px; border-radius:8px; background:transparent; border:1px solid transparent; color:#c9d3e5; cursor:pointer; font-weight:600 }
 .tab.active{ background:#1a2b4e; border-color:#284173; color:#fff }
 
 /* ===== Hero 2.0 layout ===== */
+/* Δεξιά vitrine (float cards) και αριστερό κείμενο */
 .hero-pro{ padding:28px }
 .hero-pro .hero-grid{ display:grid; gap:28px; align-items:center; grid-template-columns:1.2fr .8fr }
 .hero-left h1{ font-size:clamp(28px, 4.6vw, 40px); margin:0 0 6px }
@@ -154,7 +179,7 @@ a:hover{ text-decoration:underline }
   transition:transform .25s ease, box-shadow .25s ease; will-change:transform;
 }
 .float-card.tilt:hover{ transform:translateY(-6px) scale(1.02) }
-.float-card.delay{ animation:bob 5s ease-in-out infinite .6s }
+.float-card.delay{ animation:bob 5s ease-in-out infinite .6s } /* Ήπιο animation */
 .hero-right .icon-badge{
   width:34px; height:34px; border-radius:50%;
   background:radial-gradient(100% 100% at 30% 20%, #93c5fd 0%, #3b82f6 70%);
@@ -163,6 +188,7 @@ a:hover{ text-decoration:underline }
 @keyframes bob{ 50%{ transform:translateY(-6px) } }
 
 /* Text effects */
+/* Εφέ λάμψης/περιγράμματος/gradient/shine για τίτλους */
 .fx-glow{ text-shadow:0 6px 20px rgba(0,0,0,.45), 0 0 1px rgba(0,0,0,.45) }
 .fx-stroke{ -webkit-text-stroke:1px rgba(0,0,0,.35); text-shadow:none }
 .fx-gradient{
@@ -181,6 +207,7 @@ a:hover{ text-decoration:underline }
 .fx-tight{ letter-spacing:.2px; line-height:1.1 }
 
 /* Stats */
+/* Τετράστηλο grid στατιστικών σε desktop, με κάρτες */
 .section{ margin:34px 0 }
 .section-title{ font-size:24px; margin:0 0 12px }
 .stats-grid{ display:grid; gap:16px; grid-template-columns:repeat(4,minmax(0,1fr)) }
@@ -192,6 +219,7 @@ a:hover{ text-decoration:underline }
 .stat .label{ opacity:.9 }
 
 /* Testimonials (light slider) */
+/* Πολύ απλός "slider": εναλλαγή με κλάση .active + κουκκίδες */
 .testi{
   position:relative; overflow:hidden; background:#0f172a;
   border:1px solid rgba(255,255,255,.06); border-radius:16px; padding:20px;
@@ -207,6 +235,7 @@ a:hover{ text-decoration:underline }
 .testi .dot.active{ background:#fff }
 
 /* CTA band */
+/* Οριζόντιο call-to-action με gradient φόντο */
 .cta-band{
   display:flex; align-items:center; justify-content:space-between; gap:12px;
   padding:18px; border-radius:14px;
@@ -224,6 +253,7 @@ a:hover{ text-decoration:underline }
 }
 
 /* ===== Responsive ===== */
+/* Breakpoints 1200/900/640/520 για grid/τυπογραφία/sidebar */
 @media (max-width:1200px){
   .grid.cols-4{ grid-template-columns:repeat(3, minmax(0,1fr)) }
 }
@@ -246,7 +276,9 @@ a:hover{ text-decoration:underline }
   .brand-logo{ height:44px }
   .navbar .brand span{ font-size:16px }
 }
+
 /* === HERO CTA: καθαρότερα κουμπιά === */
+/* Τονισμένα CTA μέσα σε image hero */
 .hero.with-bg .btn{
   font-size:16px;
   padding:12px 22px;
@@ -255,27 +287,22 @@ a:hover{ text-decoration:underline }
   box-shadow: 0 8px 24px rgba(0,0,0,.35), 0 0 0 1px rgba(255,255,255,.06) inset;
   transition: transform .15s ease, box-shadow .15s ease, background .15s ease;
 }
-
 .hero.with-bg .btn:not(.ghost){           /* Πλήκτρο “Κλείστε Ραντεβού” */
   background: linear-gradient(180deg,#3b5bff 0%,#2e5bff 100%);
   border:1px solid #5f85ff;
   color:#fff;
   text-shadow: 0 1px 0 rgba(0,0,0,.25);
 }
-
 .hero.with-bg .btn.ghost{                 /* Πλήκτρο “Σύνδεση” */
   background: rgba(8,15,28,.58);         /* πιο σκούρο για αντίθεση */
   border:1px solid rgba(210,220,255,.45);
   color:#eaf2ff;
 }
-
 .hero.with-bg .btn:hover{
   transform: translateY(-1px);
   box-shadow: 0 12px 30px rgba(0,0,0,.45), 0 0 0 1px rgba(255,255,255,.08) inset;
 }
-
 .hero.with-bg .btn:active{ transform: translateY(0) scale(.98) }
-
 .hero.with-bg .btn:focus-visible{
   outline:2px solid #93b4ff;             /* καθαρό focus ring */
   outline-offset:3px;
@@ -284,8 +311,7 @@ a:hover{ text-decoration:underline }
 /* =========================
    Small safe overrides
    ========================= */
-
-/* 1) CTA κουμπιά στο HERO: πιο καθαρά/ορατά */
+/* Ήπιες «ενισχύσεις» ορατότητας σε CTA/float/cta-band χωρίς αλλαγή παλέτας */
 .hero .btn{
   background: #3b5bfd;
   border: 1px solid #5f7aff;
@@ -324,7 +350,9 @@ a:hover{ text-decoration:underline }
 }
 .cta-band .btn:hover{ filter: brightness(1.07); transform: translateY(-1px); }
 .cta-band .btn:active{ transform: translateY(0); }
+
 /* Sticky footer μόνο για login/register */
+/* Διατηρεί το footer «κολλημένο» στον πάτο σε μικρό περιεχόμενο */
 body.auth-page{
   min-height: 100vh;
   display: flex;
@@ -338,7 +366,9 @@ body.auth-page .footer + .small{
   flex-shrink: 0;       /* δεν μικραίνει */
   margin-top: 0;        /* χωρίς έξτρα κενό, κάθεται κάτω */
 }
+
 /* ========= AUTH HERO (φωτογραφία πίσω από τη φόρμα) ========= */
+/* Θολωμένη εικόνα φόντου για ορατή φόρμα */
 .auth-hero{
   position:relative;
   padding-top:24px;            /* λίγο αέρα πάνω από την κάρτα */
@@ -356,6 +386,7 @@ body.auth-page .footer + .small{
 .auth-hero > .container{ position:relative; z-index:1; }
 
 /* ========= GLASS CARD + gradient περίγραμμα ========= */
+/* “Glassy” φόρμα με gradient border mask */
 .auth-card{
   background: rgba(15,23,42,.60);
   border: 1px solid rgba(255,255,255,.14);
@@ -373,6 +404,7 @@ body.auth-page .footer + .small{
 }
 
 /* ========= Inputs με icons & φωτεινό focus ========= */
+/* Εικονίδιο στο input (απόλυτη θέση) + εμφανές focus ring */
 .field{ position:relative; }
 .input-icon{
   position:absolute; left:12px; top:50%; transform:translateY(-50%);
@@ -385,6 +417,7 @@ body.auth-page .footer + .small{
 }
 
 /* ========= Πιο premium κουμπί ========= */
+/* Δυναμωμένο primary με gradient/σκιά */
 .btn.primary{
   background: linear-gradient(90deg,#2e5bff,#4f46e5);
   box-shadow: 0 12px 28px rgba(79,70,229,.35);
@@ -400,11 +433,13 @@ body.auth-page .footer + .small{
   background: conic-gradient(#60a5fa,#4f46e5,#60a5fa);
   filter: blur(4px); z-index:-1; opacity:.75;
 }
+
 /* Login – χωρίς background, κεντραρισμένο */
 .auth-center { padding-top: 36px; padding-bottom: 10px; }
 .auth-card  { box-shadow: var(--shadow); }
 
 /* ===== Login: input eye toggle ===== */
+/* Κουμπί εμφάνισης/απόκρυψης κωδικού μέσα στο input */
 .input-wrap{ position:relative; }
 .toggle-pass{
   position:absolute; right:10px; top:50%; transform:translateY(-50%);
@@ -418,6 +453,7 @@ body.auth-page .footer + .small{
 .icon{ width:20px; height:20px; }
 
 /* ===== Buttons λίγο πιο ζωντανά (χωρίς να αλλάξουμε την παλέτα σου) ===== */
+/* Γενικοί μικροτονισμοί στο hover/active */
 .btn{
   background: linear-gradient(180deg, #3f66ff 0%, #2e5bff 70%);
   box-shadow: 0 10px 30px rgba(46,91,255,.35), inset 0 1px 0 rgba(255,255,255,.25);
@@ -427,6 +463,7 @@ body.auth-page .footer + .small{
 .btn:active{ transform: translateY(0); box-shadow: 0 6px 18px rgba(46,91,255,.28), inset 0 1px 0 rgba(255,255,255,.2); }
 
 /* spacing για σελίδες auth */
+/* Κατακόρυφο spacing ώστε footer να μένει ορατό/σταθερό */
 .auth-page .container{ margin-block: 42px 26px; }
 
 /* ===== Password toggle - layout/spacing ===== */
@@ -446,6 +483,7 @@ body.auth-page .footer + .small{
 .toggle-pass svg{ width:20px; height:20px; display:block; }
 
 /* δεξιά πλευρά του navbar */
+/* Περιοχή ενεργειών χρήστη (chip, auth buttons) */
 .nav-right{
   margin-left:auto;
   display:flex;
@@ -454,6 +492,7 @@ body.auth-page .footer + .small{
 }
 
 /* user chip */
+/* Μικρό προφίλ χρήστη compact με αρχικά/όνομα/ρόλο */
 .chip{
   display:flex;
   align-items:center;
@@ -473,8 +512,7 @@ body.auth-page .footer + .small{
 .chip-text strong{ display:block; line-height:1; font-weight:600; }
 .chip-text small{ display:block; line-height:1; opacity:.75; font-size:12px; }
 
-/* κουμπιά (ταιριάζουν με τα δικά σου) */
-.btn.primary{ /* αν έχεις ήδη .btn με στυλ, άστο. Αλλιώς: */
+.btn.primary{ 
   padding:10px 16px;
   border-radius:14px;
 }
@@ -484,5 +522,3 @@ body.auth-page .footer + .small{
   padding:8px 14px;
   border-radius:14px;
 }
-
-

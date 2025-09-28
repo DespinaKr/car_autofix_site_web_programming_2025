@@ -227,11 +227,13 @@ router.patch('/:id/password', isAuthenticated, hasRole('secretary'), asyncH(asyn
 }));
 
 // ---------- delete (safe cascading) ----------
+// DELETE /api/users/:id  — endpoint για: await api(`/api/users/${id}`, { method:'DELETE' });
 router.delete('/:id', isAuthenticated, asyncH(async (req, res) => {
-  const id = Number(req.params.id);
+  const targetId = Number(req.params.id);
+  const actor = req.session.user;
 
-  const me = req.session.user;
-  if (me.role !== 'secretary' && me.id !== id) {
+  // Δικαίωμα: μόνο secretary ή ο ίδιος ο χρήστης μπορεί να διαγράψει τον εαυτό του
+  if (actor.role !== 'secretary' && actor.id !== targetId) {
     return res.status(403).json({ error: 'Forbidden' });
   }
 
@@ -239,43 +241,79 @@ router.delete('/:id', isAuthenticated, asyncH(async (req, res) => {
   try {
     await conn.beginTransaction();
 
-    const [[u]] = await conn.query('SELECT role FROM users WHERE id=?', [id]);
+    // Κλείδωμα χρήστη για αποφυγή race conditions
+    const [[u]] = await conn.query('SELECT id, role FROM users WHERE id=? FOR UPDATE', [targetId]);
+
+    // Αν δεν υπάρχει ο χρήστης, θεωρούμε την κατάσταση ως "ήδη σβησμένος"
     if (!u) {
       await conn.rollback();
       return res.json({ message: 'Deleted' });
     }
 
-     if (u.role === 'customer') {
-      // σβήσε works των ραντεβού του πελάτη (αν υπάρχει ο πίνακας)
+    // ── Ειδικοί χειρισμοί ανά ρόλο ─────────────────────────────
+    if (u.role === 'customer') {
+      // Σβήσε works που ανήκουν σε ραντεβού του πελάτη (αν υπάρχει ο πίνακας)
       if (await tableExists('appointment_works')) {
         await conn.query(
           `DELETE aw FROM appointment_works aw
              JOIN appointments a ON a.id = aw.appointment_id
-            WHERE a.customer_id=?`, [id]
+            WHERE a.customer_id=?`,
+          [targetId]
         );
       }
 
-      // σβήσε τα ραντεβού του
-      await conn.query(`DELETE FROM appointments WHERE customer_id=?`, [id]);
-
-      // σβήσε τα οχήματα του (χειρίσου schema με/χωρίς customer_id)
-      const [[colRow]] = await conn.query(
-        `SELECT COUNT(*) AS c
-           FROM information_schema.COLUMNS
-          WHERE TABLE_SCHEMA = DATABASE()
-            AND TABLE_NAME='vehicles' AND COLUMN_NAME='customer_id'`
-      );
-      const hasCustomerIdCol = Number(colRow.c) > 0;
-
-      if (hasCustomerIdCol) {
-        await conn.query(`DELETE FROM vehicles WHERE owner_id=? OR customer_id=?`, [id, id]);
-      } else {
-        await conn.query(`DELETE FROM vehicles WHERE owner_id=?`, [id]);
+      // Σβήσε τα ραντεβού του πελάτη (αν υπάρχει ο πίνακας)
+      if (await tableExists('appointments')) {
+        await conn.query(`DELETE FROM appointments WHERE customer_id=?`, [targetId]);
       }
 
-      // σβήσε row στον customers
-      await conn.query(`DELETE FROM customers WHERE user_id=?`, [id]);
+      // Σβήσε τα οχήματα του πελάτη (υποστήριξη schema με/χωρίς customer_id)
+      if (await tableExists('vehicles')) {
+        const [[colRow]] = await conn.query(
+          `SELECT COUNT(*) AS c
+             FROM information_schema.COLUMNS
+            WHERE TABLE_SCHEMA = DATABASE()
+              AND TABLE_NAME='vehicles' AND COLUMN_NAME='customer_id'`
+        );
+        const hasCustomerIdCol = Number(colRow.c) > 0;
+        if (hasCustomerIdCol) {
+          await conn.query(`DELETE FROM vehicles WHERE owner_id=? OR customer_id=?`, [targetId, targetId]);
+        } else {
+          await conn.query(`DELETE FROM vehicles WHERE owner_id=?`, [targetId]);
+        }
+      }
+
+      // Σβήσε το προφίλ του πελάτη
+      if (await tableExists('customers')) {
+        await conn.query(`DELETE FROM customers WHERE user_id=?`, [targetId]);
+      }
+    } else if (u.role === 'mechanic') {
+      // Αποσύνδεσε τα ραντεβού από τον μηχανικό 
+      if (await tableExists('appointments')) {
+        const [[{ c: hasMechCol }]] = await conn.query(
+          `SELECT COUNT(*) c
+             FROM information_schema.COLUMNS
+            WHERE TABLE_SCHEMA=DATABASE()
+              AND TABLE_NAME='appointments' AND COLUMN_NAME='mechanic_id'`
+        );
+        if (Number(hasMechCol)) {
+          await conn.query(`UPDATE appointments SET mechanic_id=NULL WHERE mechanic_id=?`, [targetId]);
+        }
+      }
+
+      // Σβήσε το προφίλ του μηχανικού
+      if (await tableExists('mechanics')) {
+        await conn.query(`DELETE FROM mechanics WHERE user_id=?`, [targetId]);
+      }
+    } else {
+      // secretary/άλλος ρόλος: καθάρισε τυχόν συνδετικούς πίνακες αν υπάρχουν
+      if (await tableExists('customers')) await conn.query(`DELETE FROM customers WHERE user_id=?`, [targetId]);
+      if (await tableExists('mechanics')) await conn.query(`DELETE FROM mechanics WHERE user_id=?`, [targetId]);
     }
+
+    // ── Τέλος: σβήσε τον χρήστη από τον users ─────────────────
+    await conn.query(`DELETE FROM users WHERE id=?`, [targetId]);
+
     await conn.commit();
     res.json({ message: 'Deleted' });
   } catch (err) {
@@ -286,6 +324,7 @@ router.delete('/:id', isAuthenticated, asyncH(async (req, res) => {
     conn.release();
   }
 }));
+
 
 router.get('/count', isAuthenticated, hasRole('secretary'), asyncH(async (_req, res) => {
   const [[{ c }]] = await db.execute('SELECT COUNT(*) AS c FROM users');

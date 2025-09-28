@@ -1,34 +1,43 @@
 :root{
+  /* Tokens ειδικά για Vehicles UI (σκούρο πάνελ/περίγραμμα/δευτερεύον κείμενο) */
   --veh-bg: #0f1b31;
   --veh-border: #1b2947;
   --muted: #9fb1cf;
 }
 
+/* Δεξιά περιοχή navbar (π.χ. κουμπιά/chip χρήστη) */
 .nav-right{display:flex;gap:8px;align-items:center}
 
+/* ===== Toolbar (αναζήτηση, φίλτρα, σύνολο) ===== */
 .veh-toolbar{
   display:grid;
+  /* 3 στήλες: 1) αναζήτηση (εύκαμπτη), 2) select fixed 220px, 3) “Σύνολο” auto width */
   grid-template-columns: 1fr 220px auto;
   gap:12px; align-items:center;
   margin: 10px 0 14px;
 }
+/* Input/Select σε dark scheme με ίδιο περίγραμμα/στρογγύλεμα */
 .veh-toolbar .input{background:transparent;border:1px solid #22345a;border-radius:10px;padding:10px 12px}
 .veh-toolbar .select{background:transparent;border:1px solid #22345a;border-radius:10px;padding:10px 12px;color:#cfe2ff}
+/* Πληροφορία “Σύνολο: N” δεξιά */
 #totalInfo{justify-self:end;color:var(--muted)}
+/* Responsive: σε <=900px κάθε στοιχείο της toolbar σε ξεχωριστή γραμμή */
 @media(max-width:900px){
   .veh-toolbar{grid-template-columns:1fr}
   #totalInfo{justify-self:start}
 }
 
-/* grid of cards */
+/* ===== Πλέγμα καρτών οχημάτων ===== */
 .veh-grid{
   display:grid;
-  grid-template-columns: repeat(3, minmax(0,1fr));
+  grid-template-columns: repeat(3, minmax(0,1fr)); /* 3 στήλες σε desktop */
   gap:18px;
 }
+/* 2 στήλες σε wides (<=1200px), 1 στήλη σε κινητά (<=760px) */
 @media(max-width:1200px){ .veh-grid{ grid-template-columns: repeat(2, minmax(0,1fr)); } }
 @media(max-width:760px){ .veh-grid{ grid-template-columns: 1fr; } }
 
+/* ===== Κάρτα οχήματος ===== */
 .veh-card{
   background: var(--veh-bg);
   border: 1px solid var(--veh-border);
@@ -36,50 +45,63 @@
   padding: 16px;
   display:flex; flex-direction:column; gap:10px;
 }
+/* Επάνω γραμμή: τίτλος/υπότιτλος αριστερά, actions δεξιά */
 .veh-card .top{
   display:flex; align-items:center; justify-content:space-between; gap:8px;
 }
-.veh-title{font-weight:700}
-.veh-sub{ color:var(--muted); font-size:.95rem }
+.veh-title{font-weight:700}                  /* Μάρκα/μοντέλο κ.λπ. */
+.veh-sub{ color:var(--muted); font-size:.95rem } /* Δευτερεύουσες πληροφορίες */
 
+/* ===== Badges τύπων/κινητήρα ===== */
 .badge{ border-radius:999px; padding:4px 10px; border:1px solid #26406a; display:inline-flex; gap:6px; align-items:center; white-space:nowrap; }
-.badge.type{ background:#0f1e2a; color:#cfe2ff; }
-.badge.engine{ background:#152219; border-color:#1b3b28; color:#c7f0d9; }
-.badge.engine.hybrid{ background:#10222c; border-color:#1d3f5a; color:#cdeaff; }
-.badge.engine.electric{ background:#121f34; border-color:#274a7a; color:#d5e8ff; }
+.badge.type{ background:#0f1e2a; color:#cfe2ff; }                /* Π.χ. SUV/Sedan */
+.badge.engine{ background:#152219; border-color:#1b3b28; color:#c7f0d9; } /* Θερμικός */
+.badge.engine.hybrid{ background:#10222c; border-color:#1d3f5a; color:#cdeaff; }  /* Υβριδικό */
+.badge.engine.electric{ background:#121f34; border-color:#274a7a; color:#d5e8ff; }/* Ηλεκτρικό */
 
+/* Grid λεπτομερειών κάτω από την κορυφή της κάρτας */
 .row{ display:grid; grid-template-columns: 1fr 1fr; gap:6px; }
 .row .muted{ color:var(--muted); }
 
+/* ===== Δεξιά actions της κάρτας (edit/view/delete) ===== */
 .actions{ display:flex; gap:12px; align-items:center; }
 .icon{ background:transparent; border:0; color:#cfe2ff; opacity:.9; cursor:pointer }
-.icon:hover{ opacity:1; transform:translateY(-1px) }
+.icon:hover{ opacity:1; transform:translateY(-1px) }  /* ήπιο hover lift */
 .icon svg{ width:18px; height:18px; display:block }
-.icon.danger{ color:#f59a9a }
-.icon.primary{ color:#7aa3ff }
+.icon.danger{ color:#f59a9a }   /* διαγραφή/επικίνδυνη ενέργεια */
+.icon.primary{ color:#7aa3ff }  /* κύρια ενέργεια */
 
-/* pager */
+/* ===== Pager κάτω από το grid ===== */
 .veh-pager{
   display:flex; justify-content:space-between; align-items:center;
   margin-top:14px;
 }
 
-/* modal (ίδιο μοτίβο με users) */
+/* ===== Modal (ίδιο μοτίβο με Users modal) ===== */
+/* Γενικό helper για απόκρυψη */
 .hidden{ display:none !important; }
+/* Overlay πλήρους οθόνης με ημιδιαφανές φόντο και κεντράρισμα */
 .modal{ position:fixed; inset:0; display:grid; place-items:center; background:rgba(0,0,0,.45); z-index:2000; }
+/* Κάρτα διαλόγου: responsive πλάτος και dark card styling */
 .modal-card{ width:min(760px,95vw); background:#0c172b; border:1px solid var(--veh-border); border-radius:16px; padding:16px; box-shadow:0 10px 30px rgba(0,0,0,.5) }
 .modal-head{ display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+/* Grid φόρμας: 2 στήλες σε desktop, 1 σε κινητά */
 .form-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px }
 .form-grid label{ display:grid; gap:6px; color:#cfe2ff }
+/* Inputs/selects σε dark scheme με ενιαίο ύψος/padding */
 .form-grid .input, .form-grid input, .form-grid select{ background:transparent; border:1px solid #22345a; border-radius:10px; padding:10px 12px; color:#e8f0ff }
+/* Extra πεδία που καταλαμβάνουν όλο το πλάτος (αν χρειαστεί) */
 .role-extra{ grid-column:1/-1 }
+/* Περιοχή κουμπιών κάτω δεξιά στο modal */
 .modal-actions{ grid-column:1/-1; display:flex; justify-content:flex-end; gap:8px; margin-top:8px }
+/* Breakpoint κινητών */
 @media(max-width:760px){ .form-grid{ grid-template-columns:1fr } }
-/* κεφαλίδα: κουμπιά δεξιά */
+
+/* ===== Κεφαλίδα σελίδας Vehicles ===== */
+/* Τίτλος/μετρητές αριστερά, κουμπιά δεξιά */
 .page-header{
   display:flex; align-items:flex-end; justify-content:space-between;
   gap:16px; margin-bottom:12px;
 }
+/* Στοίχιση actions της κεφαλίδας (π.χ. “Προσθήκη Οχήματος”) */
 .page-actions{ display:flex; gap:8px; align-items:center; }
-
-

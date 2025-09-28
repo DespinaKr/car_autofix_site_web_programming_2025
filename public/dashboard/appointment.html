@@ -1,18 +1,41 @@
 <!doctype html>
 <html lang="el">
 <head>
+  <!--
+    ΒΑΣΙΚΑ META
+    - charset UTF-8 για ελληνικά
+    - viewport για responsive
+    - Title: εμφανίζεται στο tab
+  -->
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Λεπτομέρειες Ραντεβού · AutoFix</title>
 
+  <!--
+    CSS
+    - style.css: γενικά styles του site
+    - dash.css: πρόσθετα styles για dashboard σελίδες
+  -->
   <link rel="stylesheet" href="/css/style.css"/>
   <link rel="stylesheet" href="/css/dash.css"/>
 
+  <!--
+    JS (defer = τρέχουν μετά το parsing του HTML, με σειρά)
+    1) api.js: helper για HTTP κλήσεις / session / utils
+    2) auth-guard.js: ελέγχει αν υπάρχει session, αλλιώς redirect σε login
+    3) appointment.view.js: controller της σελίδας (fetch & render ραντεβού/εργασίες, χειρισμός φόρμας)
+  -->
   <script defer src="/js/api.js"></script>
   <script defer src="/js/auth-guard.js"></script>
   <script defer src="/js/appointment.view.js"></script>
 </head>
 <body>
+  <!--
+    NAVBAR
+    - brand: οδηγεί στο /dashboard (θα μπορούσε να σερβιριστεί guard-αρισμένο ανά ρόλο)
+    - navUser: badge που γεμίζει από JS με όνομα/ρόλο
+    - [data-action="logout"]: ο χειρισμός γίνεται από το appointment.view.js ή κοινό logout handler
+  -->
   <div class="navbar">
     <a class="brand" href="/dashboard">
       <img class="brand-logo" src="/img/logo.png" alt="AutoFix logo">
@@ -24,35 +47,90 @@
     </div>
   </div>
 
+  <!--
+    MAIN ΠΕΡΙΕΧΟΜΕΝΟ
+    - backLink: επιστροφή στη λίστα ραντεβού (προεπιλογή secretary.html)
+      (αν θες, το JS μπορεί να προσαρμόζει τον προορισμό ανά ρόλο)
+  -->
   <main class="main">
     <a class="btn ghost" id="backLink" href="/dashboard/secretary.html">« Πίσω</a>
 
+    <!--
+      ΤΙΤΛΟΣ & ΚΑΡΤΑ ΒΑΣΙΚΩΝ ΠΛΗΡΟΦΟΡΙΩΝ ΡΑΝΤΕΒΟΥ
+      - apptTitle: τίτλος (π.χ. "Ραντεβού #123 • 10:00–12:00 • 2025-09-23")
+      - apptMeta: συμπληρωματικά (π.χ. status badge, createdBy, last update)
+      ΣΗΜΑΝΤΙΚΟ ΓΙΑ ΑΣΦΑΛΕΙΑ:
+      - Στα πεδία που γεμίζουν από JS (π.χ. fCustomer/fProblem) χρησιμοποίησε textContent,
+        όχι innerHTML, για αποφυγή XSS από κακόβουλο input.
+    -->
     <h1 class="page-title">Λεπτομέρειες Ραντεβού</h1>
     <section class="card" id="cardInfo">
       <div class="card-head"><h3 id="apptTitle">—</h3></div>
       <div id="apptMeta" class="subtitle">—</div>
+
+      <!--
+        details-grid
+        - Κάθε .field έχει <b>ετικέτα</b> + <div id="..."> για την τιμή που θα δώσει το JS
+        - Τα IDs είναι hooks που συμπληρώνει το appointment.view.js
+      -->
       <div class="details-grid" style="margin-top:12px">
         <div class="field"><b>Πελάτης</b><div id="fCustomer">—</div></div>
         <div class="field"><b>Μηχανικός</b><div id="fMechanic">—</div></div>
         <div class="field"><b>Όχημα</b><div id="fVehicle">—</div></div>
         <div class="field"><b>Λόγος</b><div id="fReason">—</div></div>
+
+        <!--
+          Περιγραφή προβλήματος
+          - grid-column:1 / -1 = πιάνει όλο το πλάτος της γραμμής
+          - Προσοχή στο render: textContent για αποφυγή εισαγωγής markup
+        -->
         <div class="field" style="grid-column:1 / -1"><b>Περιγραφή προβλήματος</b><div id="fProblem">—</div></div>
+
+        <!--
+          Κόστος
+          - fCost: το JS μπορεί να μορφοποιεί (π.χ. 123.45 €) και να αθροίζει έργα/υλικά
+        -->
         <div class="field"><b>Κόστος</b><div id="fCost">—</div></div>
       </div>
     </section>
 
+    <!--
+      ΕΡΓΑΣΙΕΣ ΡΑΝΤΕΒΟΥ
+      - worksBox: container για λίστα εργασιών (αν δεν υπάρχουν, εμφανίζεται κενό/μήνυμα)
+      - workForm: φόρμα προσθήκης εργασίας (εμφανίζεται μόνο όταν status=IN_PROGRESS
+        ΚΑΙ ο χρήστης είναι ο assigned mechanic ή secretary)
+      - workHint: βοήθημα για τον κανόνα πρόσβασης
+      ΣΗΜΕΙΩΣΗ:
+      - Τα πεδία της φόρμας έχουν name="description"/"cost" όπως αναμέναν τα endpoints
+      - Η υποβολή γίνεται με JS (preventDefault → POST /api/appointments/:id/works)
+    -->
     <section class="card">
       <div class="card-head"><h3>Εργασίες</h3></div>
       <div id="worksBox" class="small">—</div>
 
+      <!--
+        workForm (hidden by default)
+        - 3 στήλες: περιγραφή (2fr) | κόστος (1fr) | κουμπί (120px)
+        - required: το browser-level validation κόβει κενά submit
+      -->
       <form id="workForm" class="hidden" style="margin-top:12px; display:grid;grid-template-columns:2fr 1fr 120px; gap:8px">
         <input class="input" type="text" name="description" placeholder="Περιγραφή εργασίας" required>
         <input class="input" type="number" step="0.01" name="cost" placeholder="Κόστος" required>
         <button class="btn" type="submit">Προσθήκη</button>
       </form>
+
+      <!--
+        Υπόμνηση κανόνα:
+        - Ενεργή μόνο όταν status=IN_PROGRESS και ο ρόλος/ιδιοκτησία το επιτρέπει
+      -->
       <div id="workHint" class="subtitle">Μόνο σε «Σε εξέλιξη» και αν είσαι ο μηχανικός του ραντεβού ή γραμματέας.</div>
     </section>
 
+    <!--
+      TOAST
+      - Εμφάνιση σύντομων ενημερώσεων (success/error)
+      - Το JS αφαιρεί/προσθέτει την .hidden, αλλάζει κείμενο, και κάνει auto-hide
+    -->
     <div class="toast hidden"></div>
   </main>
 </body>

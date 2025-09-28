@@ -14,7 +14,7 @@ router.use((req, _res, next) => {
 const asyncH = (fn) => (req, res, next) =>
   Promise.resolve(fn(req, res, next)).catch(next);
 
-// --- αν το hasRole σου δέχεται μόνο ένα ρόλο, χρησιμοποίησε αυτό:
+
 const allowRoles = (...roles) => (req, res, next) => {
   const r = req.session?.user?.role;
   return roles.includes(r) ? next() : res.status(403).json({ error: 'Forbidden' });
@@ -27,7 +27,6 @@ function todayPerth() {
 /* =========================
    LIST / SEARCH (μένει πρώτο)
    ========================= */
-// LIST / SEARCH
 router.get('/', isAuthenticated, async (req, res) => {
   const u = req.session.user;
   const { from, to, status, query } = req.query;
@@ -67,16 +66,6 @@ router.get('/', isAuthenticated, async (req, res) => {
   if (u.role === 'customer') { sql += ' AND a.customer_id = ?'; params.push(u.id); }
   if (u.role === 'mechanic') { sql += ' AND a.mechanic_id = ?'; params.push(u.id); }
 
-  // DEFAULT: μόνο όταν ΔΕΝ έχεις ημερομηνία/αναζήτηση/“recent”
-  // - Αν status λείπει ή είναι ALL -> φίλτραρε στη ΣΗΜΕΡΙΝΗ μέρα (όλες οι καταστάσεις)
-  // - Αν υπάρχει status -> ΜΗΝ βάζεις ημερομηνία (φέρε ΟΛΑ για αυτό το status)
-  // --- ΒΓΑΛΤΟ ΤΕΛΕΙΩΣ ---
-  // if (!from && !to && !query && !recent) {
-  //   if (!status || status === 'ALL') {
-  //     sql += ' AND a.appt_date = CURDATE()';
-  //   }
-  // }
-
 
   sql += recent
     ? ' ORDER BY a.created_at DESC, a.appt_date DESC, a.appt_time DESC, a.id DESC'
@@ -92,7 +81,7 @@ router.get('/', isAuthenticated, async (req, res) => {
     return { ...r, appt_time: time5, startsAt: `${r.appt_date}T${time5}` };
   });
 
-  // (αν χρειάζεσαι total/pages, πρόσθεσε και δεύτερο COUNT(*) query)
+  
   res.json({ items });
 });
 
@@ -290,7 +279,7 @@ router.get('/:id', isAuthenticated, async (req, res) => {
 
 
 /* ======================================================
-   CREATE & CANCEL (μπορούν να είναι στο τέλος)
+   CREATE & CANCEL 
    ====================================================== */
 router.post('/', isAuthenticated, hasRole('customer', 'secretary'), async (req, res) => {
   const u = req.session.user;
@@ -367,7 +356,6 @@ router.get('/:id',
   asyncH(async (req, res) => {
     const id = Number(req.params.id);
 
-    // φόρτωσε το ραντεβού με χρήσιμα join-αρισμένα πεδία
     const [[a]] = await db.execute(
       `SELECT a.*,
               CONCAT(cu.first_name,' ',cu.last_name)  AS customer_name,
