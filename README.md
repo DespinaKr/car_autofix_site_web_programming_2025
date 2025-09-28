@@ -229,7 +229,7 @@ DB_NAME=autofix
 
 <!-- LICENSE -->
 <h2 id="license">📄 License</h2>
-<p>Academic/educational project. Pick a license (e.g., MIT) that suits your repository.</p>
+<p>Academic/educational project. University of the aegean / ICSD .</p>
 
 <hr/>
 
