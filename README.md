@@ -236,4 +236,4 @@ DB_NAME=autofix
 <p align="center">
   Made with ❤️. If you find this useful, consider giving the repo a ⭐.
 </p>
-"""
+
